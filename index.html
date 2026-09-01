@@ -154,8 +154,14 @@ tbody tr.sum td{background:linear-gradient(160deg,var(--gold),var(--gold-d));col
 .kpi-scroll::-webkit-scrollbar-thumb{background:#C9B98F;border-radius:8px;border:3px solid var(--card)}
 .kpi-scroll::-webkit-scrollbar-track{background:#EEE6D3;border-radius:8px}
 /* ===== THƯ VIỆN ẢNH TÌM HIỂU NQ57 (masonry + 3D + kim tuyến + nhún) ===== */
-.gallery{columns:2 340px;column-gap:20px}
-@media(max-width:640px){.gallery{columns:1}}
+.gallery{
+  columns:2 340px;column-gap:20px;
+  width:100vw;position:relative;left:50%;right:50%;margin-left:-50vw;margin-right:-50vw;
+  padding:0 22px;box-sizing:border-box;
+}
+@media(min-width:900px){.gallery{columns:3 360px}}
+@media(min-width:1300px){.gallery{columns:4 360px}}
+@media(max-width:640px){.gallery{columns:1;padding:0 14px}}
 .gcard{position:relative;break-inside:avoid;-webkit-column-break-inside:avoid;margin:0 0 20px;border-radius:16px;overflow:hidden;
   background:var(--card);border:1px solid var(--line2);box-shadow:0 22px 44px -26px rgba(24,35,56,.5);
   transform-style:preserve-3d;transition:transform .42s cubic-bezier(.2,.8,.3,1.15),box-shadow .42s ease,border-color .42s ease}
