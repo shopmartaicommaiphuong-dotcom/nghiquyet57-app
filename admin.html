@@ -286,8 +286,10 @@ async function move(t,list,id,dir){var i=list.findIndex(function(x){return x.id=
 
 function renderBlocks(){var el=$('#blockList');el.innerHTML='';
   D.blocks.forEach(function(b){var d=document.createElement('div');d.className='row2'+(cur.block===b.id?' sel':'');
-    d.innerHTML='<div class="grow"><input class="inp" data-f="title" value="'+esc(b.title)+'" placeholder="Tên Module TO"><input class="inp" data-f="subtitle" value="'+esc(b.subtitle)+'" placeholder="Mô tả ngắn"></div><div class="acts"><button class="btn btn-sm btn-gold" data-a="save">Lưu</button><button class="btn btn-sm '+(cur.block===b.id?'btn-blue':'mini')+'" data-a="pick">'+(cur.block===b.id?'Đang chọn':'Chọn')+'</button><button class="btn btn-sm '+(b.active?'mini':'btn-gold')+'" data-a="tg">'+(b.active?'Ẩn':'Hiện')+'</button><button class="btn btn-sm btn-red" data-a="del">Xóa</button></div>';
-    d.querySelector('[data-a=save]').onclick=function(){upd('org_blocks',b.id,{title:$('[data-f=title]',d).value,subtitle:$('[data-f=subtitle]',d).value});};
+    var isU=(b.kind==='units');
+    d.innerHTML='<div class="grow"><input class="inp" data-f="title" value="'+esc(b.title)+'" placeholder="Tên Module TO"><input class="inp" data-f="subtitle" value="'+esc(b.subtitle)+'" placeholder="Mô tả ngắn"><label class="chk">Loại Module: <select class="inp" style="width:auto" data-f="kind"><option value="personnel"'+(isU?'':' selected')+'>👤 Nhân sự (thẻ người)</option><option value="units"'+(isU?' selected':'')+'>🏢 Các đơn vị (slider + liên hệ)</option></select></label></div><div class="acts"><button class="btn btn-sm btn-gold" data-a="save">Lưu</button><button class="btn btn-sm '+(cur.block===b.id?'btn-blue':'mini')+'" data-a="pick">'+(cur.block===b.id?'Đang chọn':'Chọn')+'</button><button class="btn btn-sm '+(b.active?'mini':'btn-gold')+'" data-a="tg">'+(b.active?'Ẩn':'Hiện')+'</button><button class="btn btn-sm btn-red" data-a="del">Xóa</button></div>';
+    d.querySelector('[data-f=kind]').addEventListener('change',function(){upd('org_blocks',b.id,{kind:this.value});});
+    d.querySelector('[data-a=save]').onclick=function(){upd('org_blocks',b.id,{title:$('[data-f=title]',d).value,subtitle:$('[data-f=subtitle]',d).value,kind:$('[data-f=kind]',d).value});};
     d.querySelector('[data-a=pick]').onclick=function(){cur.block=b.id;cur.tab=null;renderBlocks();renderTabs();renderPeople();};
     d.querySelector('[data-a=tg]').onclick=function(){upd('org_blocks',b.id,{active:!b.active});};
     d.querySelector('[data-a=del]').onclick=function(){if(confirm('Xóa Module + toàn bộ bên trong?')){if(cur.block===b.id){cur.block=null;cur.tab=null;}del('org_blocks',b.id);}};
@@ -296,11 +298,14 @@ function renderBlocks(){var el=$('#blockList');el.innerHTML='';
 $('#addBlock').onclick=function(){ins('org_blocks',{title:'Module mới',subtitle:'',display_order:nextOrd(D.blocks),active:true});};
 
 function renderTabs(){var sec=$('#tabSec');if(!cur.block){sec.hidden=true;return;}sec.hidden=false;
-  var b=D.blocks.find(function(x){return x.id===cur.block;});$('#crumbBlock').innerHTML='Module: <b>'+esc(b?b.title:'')+'</b>';
+  var b=D.blocks.find(function(x){return x.id===cur.block;});var units=(b&&b.kind==='units');$('#crumbBlock').innerHTML='Module: <b>'+esc(b?b.title:'')+'</b> · loại: <b>'+(units?'Các đơn vị':'Nhân sự')+'</b>';
   var list=D.tabs.filter(function(t){return t.block_id===cur.block;});var el=$('#tabList');el.innerHTML='';
   list.forEach(function(t){var d=document.createElement('div');d.className='row2'+(cur.tab===t.id?' sel':'');
-    d.innerHTML='<div class="ordbox"><button class="btn btn-sm mini" data-a="up">▲</button><button class="btn btn-sm mini" data-a="down">▼</button></div><div class="grow"><input class="inp" data-f="name" value="'+esc(t.name)+'" placeholder="Tên hội đồng"><textarea class="inp" data-f="intro" placeholder="Giới thiệu ngắn">'+esc(t.intro)+'</textarea></div><div class="acts"><button class="btn btn-sm btn-gold" data-a="save">Lưu</button><button class="btn btn-sm '+(cur.tab===t.id?'btn-blue':'mini')+'" data-a="pick">'+(cur.tab===t.id?'Đang chọn':'Chọn')+'</button><button class="btn btn-sm '+(t.active?'mini':'btn-gold')+'" data-a="tg">'+(t.active?'Ẩn':'Hiện')+'</button><button class="btn btn-sm btn-red" data-a="del">Xóa</button></div>';
-    d.querySelector('[data-a=save]').onclick=function(){upd('org_tabs',t.id,{name:$('[data-f=name]',d).value,intro:$('[data-f=intro]',d).value});};
+    var contactHtml=units
+      ?('<input class="inp" data-f="address" value="'+esc(t.address||'')+'" placeholder="📍 Địa chỉ đơn vị"><input class="inp" data-f="phone" value="'+esc(t.phone||'')+'" placeholder="☎️ Điện thoại"><input class="inp" data-f="email" value="'+esc(t.email||'')+'" placeholder="✉️ Email"><input class="inp" data-f="link" value="'+esc(t.link||'')+'" placeholder="🌐 Website (link truy cập)">')
+      :('<input class="inp" data-f="link" value="'+esc(t.link||'')+'" placeholder="Link truy cập đích của hội đồng (để trống nếu không có)">');
+    d.innerHTML='<div class="ordbox"><button class="btn btn-sm mini" data-a="up">▲</button><button class="btn btn-sm mini" data-a="down">▼</button></div><div class="grow"><input class="inp" data-f="name" value="'+esc(t.name)+'" placeholder="'+(units?'Tên đơn vị':'Tên hội đồng')+'"><textarea class="inp" data-f="intro" placeholder="'+(units?'Nội dung giới thiệu đơn vị':'Giới thiệu ngắn')+'">'+esc(t.intro)+'</textarea>'+contactHtml+'</div><div class="acts"><button class="btn btn-sm btn-gold" data-a="save">Lưu</button><button class="btn btn-sm '+(cur.tab===t.id?'btn-blue':'mini')+'" data-a="pick">'+(cur.tab===t.id?'Đang chọn':'Chọn')+'</button><button class="btn btn-sm '+(t.active?'mini':'btn-gold')+'" data-a="tg">'+(t.active?'Ẩn':'Hiện')+'</button><button class="btn btn-sm btn-red" data-a="del">Xóa</button></div>';
+    d.querySelector('[data-a=save]').onclick=function(){var o={name:$('[data-f=name]',d).value,intro:$('[data-f=intro]',d).value,link:$('[data-f=link]',d).value};var ad=$('[data-f=address]',d),ph=$('[data-f=phone]',d),em=$('[data-f=email]',d);if(ad)o.address=ad.value;if(ph)o.phone=ph.value;if(em)o.email=em.value;upd('org_tabs',t.id,o);};
     d.querySelector('[data-a=pick]').onclick=function(){cur.tab=t.id;renderTabs();renderPeople();};
     d.querySelector('[data-a=tg]').onclick=function(){upd('org_tabs',t.id,{active:!t.active});};
     d.querySelector('[data-a=del]').onclick=function(){if(confirm('Xóa hội đồng + thành viên?')){if(cur.tab===t.id)cur.tab=null;del('org_tabs',t.id);}};
@@ -310,7 +315,7 @@ function renderTabs(){var sec=$('#tabSec');if(!cur.block){sec.hidden=true;return
   if(!list.length)el.innerHTML='<p class="hint">Chưa có hội đồng.</p>';}
 $('#addTab').onclick=function(){if(!cur.block)return;ins('org_tabs',{block_id:cur.block,name:'Hội đồng mới',intro:'',display_order:nextOrd(D.tabs.filter(function(t){return t.block_id===cur.block;})),active:true});};
 
-function renderPeople(){var sec=$('#peopleSec');if(!cur.tab){sec.hidden=true;return;}sec.hidden=false;
+function renderPeople(){var sec=$('#peopleSec');if(!cur.tab){sec.hidden=true;return;}var bk=D.blocks.find(function(x){return x.id===cur.block;});if(bk&&bk.kind==='units'){sec.hidden=true;return;}sec.hidden=false;
   var t=D.tabs.find(function(x){return x.id===cur.tab;});$('#crumbTab').innerHTML='Hội đồng: <b>'+esc(t?t.name:'')+'</b>';
   var list=D.people.filter(function(p){return p.tab_id===cur.tab;});var el=$('#peopleList');el.innerHTML='';
   list.forEach(function(p){var c=document.createElement('div');c.className='pcard'+(p.active?'':' off');

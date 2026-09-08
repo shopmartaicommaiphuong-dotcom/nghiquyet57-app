@@ -892,6 +892,14 @@ body>section,body>header,body>footer{position:relative;z-index:1}
 .org-slide:hover::after{left:140%}
 @keyframes orgscroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 @media (prefers-reduced-motion:reduce){.org-track{animation:none}}
+.org-units-intro{margin:14px 0 0;color:#41506b;font-size:.96rem;line-height:1.75}
+.org-contact{margin-top:14px;background:#fff;border:1px solid #e6edf7;border-radius:14px;padding:4px 16px;box-shadow:0 10px 24px rgba(20,40,90,.08)}
+.ocrow{display:flex;gap:11px;align-items:baseline;padding:11px 0;border-bottom:1px dashed #eef2f8}
+.ocrow:last-child{border-bottom:0}
+.ocic{font-size:1.05rem;flex:none}
+.ocl{width:100px;flex:none;color:#5b6b86;font-weight:700;font-size:.86rem}
+.ocv{flex:1;color:#132038;font-weight:600;font-size:.93rem;word-break:break-word}
+.ocv a{color:#1552b8;font-weight:800;text-decoration:none}.ocv a:hover{text-decoration:underline}
 </style>
 
 <section class="org-sec"><div class="wrap">
@@ -919,6 +927,13 @@ body>section,body>header,body>footer{position:relative;z-index:1}
   var SLIDES=[];
   function slidesOf(type,id){return SLIDES.filter(function(s){return s.owner_type===type&&String(s.owner_id)===String(id);}).sort(function(a,b){return (a.display_order-b.display_order)||(a.id-b.id);});}
   function sliderHTML(list,secs){if(!list.length)return '';var s=(+secs>0?+secs:30);var im=list.map(function(x){return '<div class="org-slide"><img loading="lazy" src="'+esc(x.image_url)+'" alt=""></div>';}).join('');return '<div class="org-slider"><div class="org-track" style="animation-duration:'+s+'s">'+im+im+'</div></div>';}
+  function contactBox(t){if(!t)return '';var r='';
+    function row(ic,l,v,href){if(!v)return '';var vv=href?('<a href="'+esc(href)+'" target="_blank" rel="noopener">'+esc(v)+'</a>'):esc(v);return '<div class="ocrow"><span class="ocic">'+ic+'</span><span class="ocl">'+l+'</span><span class="ocv">'+vv+'</span></div>';}
+    r+=row('📍','Địa chỉ',t.address,'');
+    r+=row('☎️','Điện thoại',t.phone,t.phone?('tel:'+String(t.phone).replace(/[^0-9+]/g,'')):'');
+    r+=row('✉️','Email',t.email,t.email?('mailto:'+t.email):'');
+    r+=row('🌐','Website',t.link,t.link);
+    return r?('<div class="org-contact">'+r+'</div>'):'';}
 
   function personCard(p){
     var photo=p.photo_url?('<div class="op-photo"><img loading="lazy" src="'+esc(p.photo_url)+'" alt=""></div>')
@@ -940,9 +955,16 @@ body>section,body>header,body>footer{position:relative;z-index:1}
       var t=tabs.filter(function(x){return x.id==tid;})[0];
       var ppl=(peopleByTab[tid]||[]);
       var det=el.querySelector('#det-'+block.id);
-      det.innerHTML=(t&&t.intro?'<p class="intro">'+esc(t.intro)+'</p>':'')+
-        sliderHTML(slidesOf('tab',tid),t&&t.slide_secs)+
-        (ppl.length?('<div class="org-people">'+ppl.map(personCard).join('')+'</div>'):'<div class="org-empty">Chưa có thành viên.</div>');
+      if(block.kind==='units'){
+        det.innerHTML=sliderHTML(slidesOf('tab',tid),t&&t.slide_secs)+
+          (t&&t.intro?'<div class="org-units-intro">'+nl(t.intro)+'</div>':'')+
+          contactBox(t);
+      }else{
+        det.innerHTML=(t&&t.intro?'<p class="intro">'+esc(t.intro)+'</p>':'')+
+          (t&&t.link?'<p class="intro" style="margin-top:-4px"><a class="op-link" href="'+esc(t.link)+'" target="_blank" rel="noopener">🔗 Truy cập trang hội đồng ↗</a></p>':'')+
+          sliderHTML(slidesOf('tab',tid),t&&t.slide_secs)+
+          (ppl.length?('<div class="org-people">'+ppl.map(personCard).join('')+'</div>'):'<div class="org-empty">Chưa có thành viên.</div>');
+      }
     }
     el.querySelectorAll('.org-tab').forEach(function(b){b.onclick=function(){show(+b.getAttribute('data-t'));};});
     var def=(state.active[block.id]&&tabs.some(function(x){return x.id==state.active[block.id];}))?state.active[block.id]:(tabs[0]&&tabs[0].id);
