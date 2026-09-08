@@ -308,6 +308,98 @@ footer{padding:32px 0 60px;text-align:center;color:var(--muted);font-size:.84rem
   .rings{grid-template-columns:1fr} .shift{grid-template-columns:1fr}.arrow{transform:rotate(90deg);margin:2px auto}
 }
 </style>
+
+<style>
+/* Ảnh thư viện "Tìm hiểu NQ57" TO HẾT CỠ — full bề ngang, 1 cột */
+#sb-gallery{columns:1 !important;column-gap:0 !important;display:block !important}
+#sb-gallery .gcard{width:100% !important;margin:0 0 26px !important;break-inside:avoid}
+#sb-gallery .gimg{width:100% !important}
+#sb-gallery .gimg img{width:100% !important;height:auto !important;display:block !important;object-fit:contain !important}
+
+/* ================================================================
+   BỘ HIỆU ỨNG 3D TOÀN TRANG (bổ sung — KHÔNG bỏ hiệu ứng cũ)
+   ================================================================ */
+
+/* 1) NỔI KHỐI 3D + SÁNG LÊN khi rê chuột — cho mọi vùng thẻ */
+.stat,.tier,.chip,.vcard,.gc,.fstep,.step,.formula,.shift,.gcard,.frow,.pill{
+  transition:transform .34s cubic-bezier(.34,1.56,.64,1),box-shadow .34s ease,filter .34s ease !important;will-change:transform}
+.stat:hover,.tier:hover,.chip:hover,.vcard:hover,.gc:hover,.fstep:hover,.step:hover,.formula:hover,.shift:hover,.gcard:hover,.frow:hover,.pill:hover{
+  transform:translateY(-7px) scale(1.018);
+  box-shadow:0 28px 60px -20px rgba(21,82,184,.55),0 8px 20px rgba(20,40,90,.18);
+  filter:brightness(1.05) saturate(1.06)}
+/* Nền cho particle nằm sau nội dung */
+body>section,body>header,body>footer{position:relative;z-index:1}
+#fx-particles{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+/* LẬT 3D ảnh khi rê (nghiêng sâu) */
+.gcard .gimg,.figure img{transition:transform .55s cubic-bezier(.2,.7,.2,1)}
+.gcard:hover .gimg{transform:perspective(1100px) rotateY(9deg) scale(1.05)}
+.figure:hover img{transform:perspective(1200px) rotateY(-6deg) scale(1.04)}
+/* Vào khung lật 3D nhẹ cho các card khi cuộn tới */
+.reveal.in .gimg{animation:pvflipin .8s cubic-bezier(.2,.7,.2,1) both}
+@keyframes pvflipin{from{transform:perspective(1000px) rotateY(-24deg);opacity:0}to{transform:none;opacity:1}}
+
+/* 2) Kim tuyến quét cho các khối chưa có */
+.gcard,.plg{position:relative;overflow:hidden}
+.gcard::before,.plg::before{content:"";position:absolute;top:0;left:-80%;width:55%;height:100%;
+  background:linear-gradient(115deg,transparent,rgba(255,255,255,.5),transparent);transform:skewX(-20deg);transition:left .7s ease;pointer-events:none;z-index:3}
+.gcard:hover::before,.plg:hover::before{left:135%}
+
+/* 3) Ảnh 3D nghiêng: giữ transform gốc, chỉ tăng sáng + đổ bóng */
+.figure:hover,.poster:hover,.vtframe:hover{filter:brightness(1.05) saturate(1.06);box-shadow:0 36px 74px -26px rgba(24,35,56,.72)}
+
+/* 4) Tiêu đề neon sáng lên khi hover khối tiêu đề */
+.sec-h h2{transition:text-shadow .4s,color .4s}
+.sec-h:hover h2{text-shadow:0 0 20px rgba(47,123,230,.55),0 0 4px rgba(47,123,230,.45)}
+
+/* 5) Con số nảy + phát sáng */
+.stat .n,.stat .count{transition:transform .3s cubic-bezier(.34,1.56,.64,1),text-shadow .3s}
+.stat:hover .n,.stat:hover .count{transform:scale(1.08);text-shadow:0 0 22px rgba(212,160,23,.6)}
+
+/* 6) Bảng: hàng sáng lên + nhích khi rê */
+.tbl3d tbody tr{transition:background .22s,transform .22s}
+.tbl3d tbody tr:hover{background:linear-gradient(90deg,rgba(21,82,184,.10),rgba(21,82,184,.02)) !important;transform:scale(1.006)}
+
+/* 7) Nút CTA & nút thường nảy nhẹ */
+.cta,.btn{transition:transform .28s cubic-bezier(.34,1.56,.64,1),box-shadow .28s,filter .28s}
+.cta:hover,.btn:hover{transform:translateY(-3px) scale(1.03);filter:brightness(1.06)}
+
+/* ============ VÙNG DONUT 34 TỈNH — đặc tả riêng (ưu tiên cao) ============ */
+#pv-wrap .panel{transition:transform .38s cubic-bezier(.34,1.56,.64,1),box-shadow .38s,filter .38s}
+#pv-wrap .panel:hover{transform:translateY(-8px) scale(1.02);box-shadow:0 34px 72px -22px rgba(47,123,230,.6),inset 0 0 0 1px rgba(120,170,255,.28);filter:brightness(1.06)}
+/* donut: phóng to + sáng rực + vòng hào quang xoay khi rê panel */
+#pv-wrap .pv-donut{isolation:isolate;transition:background .55s ease,transform .45s cubic-bezier(.34,1.56,.64,1),filter .45s ease !important}
+#pv-wrap .panel:hover .pv-donut{transform:scale(1.06);filter:drop-shadow(0 20px 46px rgba(47,123,230,.7)) brightness(1.1) saturate(1.14)}
+#pv-wrap .pv-donut::before{content:"";position:absolute;inset:-14px;border-radius:50%;z-index:-1;
+  background:conic-gradient(from 0deg,transparent 0 68%,rgba(120,180,255,.6) 84%,transparent 100%);opacity:0;transition:opacity .4s;filter:blur(3px)}
+#pv-wrap .panel:hover .pv-donut::before{opacity:1;animation:pvspin 3.2s linear infinite}
+/* chú giải trượt + swatch phát sáng */
+#pv-wrap .plg{transition:transform .25s,background .25s,box-shadow .25s}
+#pv-wrap .plg:hover{transform:translateX(7px);background:rgba(255,255,255,.13);box-shadow:0 8px 20px rgba(0,0,0,.3)}
+#pv-wrap .plg i{transition:transform .3s,box-shadow .3s}
+#pv-wrap .plg:hover i{transform:scale(1.25);box-shadow:0 0 14px currentColor}
+/* nút chọn tỉnh + item menu */
+#pv-wrap .pv-selBtn:hover{transform:translateY(-3px) scale(1.04)}
+#pv-wrap .pv-menu button{transition:transform .18s,background .18s,padding-left .18s}
+#pv-wrap .pv-menu button:hover{transform:translateX(4px);padding-left:16px}
+
+/* ============ HOẠT CẢNH LIÊN TỤC (chỉ khi thiết bị cho phép chuyển động) ============ */
+@media (prefers-reduced-motion:no-preference){
+  .badge{position:relative;overflow:hidden}
+  .badge::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 42%,rgba(255,255,255,.55) 50%,transparent 58%);transform:translateX(-130%);animation:pvshine 3.6s ease-in-out infinite}
+  #pv-wrap .pv-selBtn{animation:pvgold 2.6s ease-in-out infinite}
+  #pv-wrap .pv-donut{animation:pvbreathe 4.6s ease-in-out infinite}
+  .step .lv,.fstep .no{animation:pvfloaty 3.4s ease-in-out infinite}
+  .step:nth-child(2n) .lv,.fstep:nth-child(2n) .no{animation-delay:.5s}
+  .step:nth-child(3n) .lv,.fstep:nth-child(3n) .no{animation-delay:1s}
+  .plg i{animation:pvswatch 2.8s ease-in-out infinite}
+}
+@keyframes pvspin{to{transform:rotate(360deg)}}
+@keyframes pvshine{0%,72%{transform:translateX(-130%)}100%{transform:translateX(130%)}}
+@keyframes pvgold{0%,100%{box-shadow:0 6px 16px rgba(212,160,23,.42)}50%{box-shadow:0 8px 26px rgba(212,160,23,.8)}}
+@keyframes pvbreathe{0%,100%{filter:drop-shadow(0 12px 26px rgba(0,0,0,.5))}50%{filter:drop-shadow(0 16px 40px rgba(47,123,230,.45))}}
+@keyframes pvfloaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes pvswatch{0%,100%{box-shadow:0 0 0 rgba(0,0,0,0)}50%{box-shadow:0 0 10px currentColor}}
+</style>
 </head>
 <body>
 
@@ -355,14 +447,44 @@ footer{padding:32px 0 60px;text-align:center;color:var(--muted);font-size:.84rem
 
 <section><div class="wrap">
   <div class="sec-h reveal"><span class="eyebrow">Bức tranh đơn vị hành chính</span><h2>Cơ cấu xã / phường / đặc khu</h2><p>Sau sắp xếp, bộ máy tinh gọn — trách nhiệm dồn về cơ sở.</p></div>
-  <div class="split">
+  <style>
+   .pv-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+   .pv-selWrap{position:relative}
+   .pv-selBtn{background:linear-gradient(145deg,#F6C945,#D4A017);color:#3a2a00;border:0;font-weight:800;padding:9px 14px;border-radius:11px;cursor:pointer;font-family:inherit;font-size:.86rem;display:flex;align-items:center;gap:9px;box-shadow:0 6px 16px rgba(212,160,23,.42);transition:transform .16s cubic-bezier(.34,1.56,.64,1),filter .16s}
+   .pv-selBtn:hover{transform:translateY(-2px);filter:brightness(1.06)}
+   .pv-selBtn b{font-size:.8rem}
+   .pv-menu{position:absolute;right:0;top:112%;z-index:50;background:#0e1f3d;border:1px solid rgba(255,255,255,.16);border-radius:13px;padding:6px;max-height:340px;overflow-y:auto;width:270px;display:none;box-shadow:0 22px 54px rgba(0,0,0,.55)}
+   .pv-menu.open{display:block;animation:pvfade .22s ease}
+   @keyframes pvfade{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+   .pv-menu button{display:flex;justify-content:space-between;align-items:center;width:100%;background:transparent;border:0;color:#dfe8fb;font-family:inherit;font-size:.85rem;text-align:left;padding:9px 11px;border-radius:9px;cursor:pointer;gap:12px}
+   .pv-menu button:hover{background:rgba(255,255,255,.09)}
+   .pv-menu button.active{background:rgba(243,198,78,.18);color:#fff}
+   .pv-menu button .n{color:#8fb0e6;font-weight:800;font-size:.8rem}
+   .pv-donutBox{display:flex;justify-content:center;margin:8px 0 6px}
+   .pv-donut{width:222px;height:222px;border-radius:50%;position:relative;transition:background .55s ease;filter:drop-shadow(0 12px 26px rgba(0,0,0,.5))}
+   .pv-donut::after{content:"";position:absolute;inset:0;border-radius:50%;background:radial-gradient(130px 96px at 32% 22%,rgba(255,255,255,.34),transparent 62%);pointer-events:none}
+   .pv-hole{position:absolute;inset:25%;border-radius:50%;background:radial-gradient(circle at 50% 38%,#143257,#0a1c38);display:grid;place-items:center;text-align:center;box-shadow:inset 0 7px 20px rgba(0,0,0,.55)}
+   .pv-num{font-size:2.7rem;font-weight:800;color:#fff;line-height:1}
+   .pv-hole small{display:block;color:#bcd0f2;font-weight:700;font-size:.82rem;margin-top:2px}
+  </style>
+  <div class="split" id="pv-wrap">
    <div class="reveal"><div class="panel">
-     <div class="pt">Cơ cấu 114 đơn vị · Hải Phòng</div>
-     <svg class="chartsvg" viewBox="0 0 380 300" xmlns="http://www.w3.org/2000/svg"><defs><filter id="pglow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="6" stdDeviation="9" flood-color="#0A1E44" flood-opacity="0.55"/></filter></defs><g filter="url(#pglow)"><path d="M 190.0 90.0 A 118 66 0 1 1 128.2 212.2" fill="none" stroke="#1C7A43" stroke-width="42"/><path d="M 128.2 212.2 A 118 66 0 0 1 177.0 90.4" fill="none" stroke="#A87A15" stroke-width="42"/><path d="M 177.0 90.4 A 118 66 0 0 1 190.0 90.0" fill="none" stroke="#9A1720" stroke-width="42"/><path d="M 190.0 66.0 A 118 66 0 1 1 128.2 188.2" fill="none" stroke="#3ECB72" stroke-width="42"/><path d="M 128.2 188.2 A 118 66 0 0 1 177.0 66.4" fill="none" stroke="#F3C64E" stroke-width="42"/><path d="M 177.0 66.4 A 118 66 0 0 1 190.0 66.0" fill="none" stroke="#F1584D" stroke-width="42"/><path d="M 87.8 91.0 A 118 66 0 0 1 249.0 66.8" fill="none" stroke="#FFFFFF" stroke-width="7" opacity="0.28" stroke-linecap="round"/></g><text x="190" y="138" text-anchor="middle" font-family="Be Vietnam Pro,sans-serif" font-weight="900" font-size="40" fill="#EAF4FF">114</text><text x="190" y="162" text-anchor="middle" font-family="Be Vietnam Pro,sans-serif" font-weight="700" font-size="14" fill="#9FB6D6">Hải Phòng</text></svg>
+     <div class="pv-head">
+       <div class="pt" id="pv-title">Cơ cấu 114 đơn vị · Hải Phòng</div>
+       <div class="pv-selWrap">
+         <button class="pv-selBtn" id="pv-selBtn" type="button" aria-haspopup="listbox"><span id="pv-selLabel">TP Hải Phòng</span><b>▾</b></button>
+         <div class="pv-menu" id="pv-menu" role="listbox"></div>
+       </div>
+     </div>
+     <div class="pv-donutBox">
+       <div class="pv-donut" id="pv-donut" style="background:conic-gradient(#3ECB72 0 58.8%,#F3C64E 58.8% 98.2%,#F1584D 98.2% 100%)">
+         <div class="pv-hole"><span class="pv-num" id="pv-total">114</span><small id="pv-name">Hải Phòng</small></div>
+       </div>
+     </div>
      <div class="plegend">
-       <div class="plg" style="color:#3ECB72"><i></i><span class="t">Xã</span><span class="v">67</span></div>
-       <div class="plg" style="color:#F3C64E"><i></i><span class="t">Phường</span><span class="v">45</span></div>
-       <div class="plg" style="color:#F1584D"><i></i><span class="t">Đặc khu — Cát Hải, Bạch Long Vĩ</span><span class="v">2</span></div>
+       <div class="plg" style="color:#3ECB72"><i></i><span class="t">Xã</span><span class="v" id="pv-lx">67</span></div>
+       <div class="plg" style="color:#F3C64E"><i></i><span class="t">Phường</span><span class="v" id="pv-lp">45</span></div>
+       <div class="plg" style="color:#F1584D"><i></i><span class="t" id="pv-ldkt">Đặc khu — Cát Hải, Bạch Long Vĩ</span><span class="v" id="pv-ldk">2</span></div>
      </div>
    </div></div>
    <div class="reveal" style="transition-delay:.1s">
@@ -370,13 +492,85 @@ footer{padding:32px 0 60px;text-align:center;color:var(--muted);font-size:.84rem
      <thead><tr><th>Phạm vi</th><th class="c">Xã</th><th class="c">Phường</th><th class="c">Đặc khu</th><th class="c">Tổng</th></tr></thead>
      <tbody>
       <tr><td>Cả nước</td><td class="c">2.621</td><td class="c">687</td><td class="c">13</td><td class="c"><span class="badge b-blue">3.321</span></td></tr>
-      <tr><td>Thành phố Hải Phòng</td><td class="c">67</td><td class="c">45</td><td class="c">2</td><td class="c"><span class="badge b-red">114</span></td></tr>
-      <tr class="sum"><td>Trọng điểm giai đoạn đầu</td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td class="c">Hải Phòng</td></tr>
+      <tr><td id="pv-rowname">Thành phố Hải Phòng</td><td class="c" id="pv-rx">67</td><td class="c" id="pv-rp">45</td><td class="c" id="pv-rdk">2</td><td class="c"><span class="badge b-red" id="pv-rtot">114</span></td></tr>
+      <tr class="sum"><td>Diện tích · Dân số</td><td class="c" colspan="2" id="pv-area">3.194,7 km²</td><td class="c" colspan="2" id="pv-pop">4.664.124 người</td></tr>
      </tbody>
     </table></div></div>
-    <p style="margin-top:14px;color:var(--muted);font-size:.9rem;font-weight:600">Nguồn: Nghị quyết 1669/NQ-UBTVQH15 &amp; số liệu sắp xếp đơn vị hành chính năm 2025.</p>
+    <p id="pv-merge" style="margin-top:12px;color:var(--ink);font-size:.9rem;font-weight:700"></p>
+    <p style="margin-top:6px;color:var(--muted);font-size:.82rem;font-weight:600">Nguồn: 34 Nghị quyết UBTVQH sắp xếp ĐVHC cấp xã 2025 &amp; Cổng TTĐT Chính phủ; tổng hợp số liệu tỉnh (Wikipedia). Cập nhật 09/2026.</p>
    </div>
   </div>
+  <script>
+  (function(){
+   var P=[
+    {n:"TP Hà Nội",f:"Thành phố Hà Nội",x:75,p:51,d:0,a:"3.359,8",pop:"8.807.523",m:"Giữ nguyên",dk:""},
+    {n:"Cao Bằng",f:"Tỉnh Cao Bằng",x:53,p:3,d:0,a:"6.700,4",pop:"573.119",m:"Giữ nguyên",dk:""},
+    {n:"Tuyên Quang",f:"Tỉnh Tuyên Quang",x:177,p:7,d:0,a:"13.795,5",pop:"1.865.270",m:"Hà Giang + Tuyên Quang",dk:""},
+    {n:"Điện Biên",f:"Tỉnh Điện Biên",x:42,p:3,d:0,a:"9.539,9",pop:"673.091",m:"Giữ nguyên",dk:""},
+    {n:"Lai Châu",f:"Tỉnh Lai Châu",x:36,p:2,d:0,a:"9.068,7",pop:"512.601",m:"Giữ nguyên",dk:""},
+    {n:"Sơn La",f:"Tỉnh Sơn La",x:67,p:8,d:0,a:"14.108,9",pop:"1.404.587",m:"Giữ nguyên",dk:""},
+    {n:"Lào Cai",f:"Tỉnh Lào Cai",x:89,p:10,d:0,a:"13.256,9",pop:"1.778.785",m:"Yên Bái + Lào Cai",dk:""},
+    {n:"Thái Nguyên",f:"Tỉnh Thái Nguyên",x:76,p:15,d:0,a:"8.375,2",pop:"1.799.489",m:"Bắc Kạn + Thái Nguyên",dk:""},
+    {n:"Lạng Sơn",f:"Tỉnh Lạng Sơn",x:61,p:4,d:0,a:"8.310,2",pop:"881.384",m:"Giữ nguyên",dk:""},
+    {n:"Quảng Ninh",f:"Tỉnh Quảng Ninh",x:22,p:30,d:2,a:"6.208,0",pop:"1.497.477",m:"Giữ nguyên",dk:"Vân Đồn, Cô Tô"},
+    {n:"Bắc Ninh",f:"Tỉnh Bắc Ninh",x:66,p:33,d:0,a:"4.718,6",pop:"3.619.433",m:"Bắc Giang + Bắc Ninh",dk:""},
+    {n:"Phú Thọ",f:"Tỉnh Phú Thọ",x:133,p:15,d:0,a:"9.361,4",pop:"4.022.638",m:"Vĩnh Phúc + Hòa Bình + Phú Thọ",dk:""},
+    {n:"TP Hải Phòng",f:"Thành phố Hải Phòng",x:67,p:45,d:2,a:"3.194,7",pop:"4.664.124",m:"Hải Dương + Hải Phòng",dk:"Cát Hải, Bạch Long Vĩ"},
+    {n:"Hưng Yên",f:"Tỉnh Hưng Yên",x:93,p:11,d:0,a:"2.514,8",pop:"3.567.943",m:"Thái Bình + Hưng Yên",dk:""},
+    {n:"Ninh Bình",f:"Tỉnh Ninh Bình",x:97,p:32,d:0,a:"3.942,6",pop:"4.412.464",m:"Hà Nam + Nam Định + Ninh Bình",dk:""},
+    {n:"Thanh Hóa",f:"Tỉnh Thanh Hóa",x:147,p:19,d:0,a:"11.114,7",pop:"4.324.783",m:"Giữ nguyên",dk:""},
+    {n:"Nghệ An",f:"Tỉnh Nghệ An",x:119,p:11,d:0,a:"16.486,5",pop:"3.831.694",m:"Giữ nguyên",dk:""},
+    {n:"Hà Tĩnh",f:"Tỉnh Hà Tĩnh",x:60,p:9,d:0,a:"5.994,5",pop:"1.622.901",m:"Giữ nguyên",dk:""},
+    {n:"Quảng Trị",f:"Tỉnh Quảng Trị",x:69,p:8,d:1,a:"12.700,0",pop:"1.870.845",m:"Quảng Bình + Quảng Trị",dk:"Cồn Cỏ"},
+    {n:"TP Huế",f:"Thành phố Huế",x:19,p:21,d:0,a:"4.947,1",pop:"1.432.986",m:"Giữ nguyên",dk:""},
+    {n:"TP Đà Nẵng",f:"Thành phố Đà Nẵng",x:70,p:23,d:1,a:"11.859,6",pop:"3.065.628",m:"Quảng Nam + Đà Nẵng",dk:"Hoàng Sa"},
+    {n:"Quảng Ngãi",f:"Tỉnh Quảng Ngãi",x:86,p:9,d:1,a:"14.832,6",pop:"2.161.755",m:"Kon Tum + Quảng Ngãi",dk:"Lý Sơn"},
+    {n:"Gia Lai",f:"Tỉnh Gia Lai",x:110,p:25,d:0,a:"21.576,9",pop:"3.583.693",m:"Bình Định + Gia Lai",dk:""},
+    {n:"Khánh Hòa",f:"Tỉnh Khánh Hòa",x:48,p:16,d:1,a:"8.555,9",pop:"2.243.554",m:"Ninh Thuận + Khánh Hòa",dk:"Trường Sa"},
+    {n:"Đắk Lắk",f:"Tỉnh Đắk Lắk",x:88,p:14,d:0,a:"18.096,4",pop:"3.346.853",m:"Phú Yên + Đắk Lắk",dk:""},
+    {n:"Lâm Đồng",f:"Tỉnh Lâm Đồng",x:103,p:20,d:1,a:"24.233,1",pop:"3.872.999",m:"Đắk Nông + Bình Thuận + Lâm Đồng",dk:"Phú Quý"},
+    {n:"Đồng Nai",f:"Tỉnh Đồng Nai",x:72,p:23,d:0,a:"12.737,2",pop:"4.491.408",m:"Bình Phước + Đồng Nai",dk:""},
+    {n:"TP Hồ Chí Minh",f:"Thành phố Hồ Chí Minh",x:54,p:113,d:1,a:"6.772,6",pop:"14.002.598",m:"Bà Rịa-Vũng Tàu + Bình Dương + TP.HCM",dk:"Côn Đảo"},
+    {n:"Tây Ninh",f:"Tỉnh Tây Ninh",x:82,p:14,d:0,a:"8.536,4",pop:"3.254.170",m:"Long An + Tây Ninh",dk:""},
+    {n:"Đồng Tháp",f:"Tỉnh Đồng Tháp",x:82,p:20,d:0,a:"5.938,6",pop:"4.370.046",m:"Tiền Giang + Đồng Tháp",dk:""},
+    {n:"Vĩnh Long",f:"Tỉnh Vĩnh Long",x:105,p:19,d:0,a:"6.296,2",pop:"4.257.581",m:"Bến Tre + Trà Vinh + Vĩnh Long",dk:""},
+    {n:"An Giang",f:"Tỉnh An Giang",x:85,p:14,d:3,a:"9.888,9",pop:"4.952.238",m:"Kiên Giang + An Giang",dk:"Phú Quốc, Thổ Châu, Kiên Hải"},
+    {n:"TP Cần Thơ",f:"Thành phố Cần Thơ",x:72,p:31,d:0,a:"6.360,8",pop:"4.199.824",m:"Sóc Trăng + Hậu Giang + Cần Thơ",dk:""},
+    {n:"Cà Mau",f:"Tỉnh Cà Mau",x:55,p:9,d:0,a:"7.942,4",pop:"2.606.672",m:"Bạc Liêu + Cà Mau",dk:""}
+   ];
+   var GREEN="#3ECB72",GOLD="#F3C64E",RED="#F1584D";
+   var menu=document.getElementById('pv-menu'),btn=document.getElementById('pv-selBtn');
+   if(!menu||!btn)return;
+   function tot(o){return o.x+o.p+o.d;}
+   function pick(o){
+     var t=tot(o);
+     document.getElementById('pv-title').textContent='Cơ cấu '+t+' đơn vị · '+o.n;
+     document.getElementById('pv-selLabel').textContent=o.n;
+     document.getElementById('pv-total').textContent=t;
+     document.getElementById('pv-name').textContent=o.n.replace(/^TP /,'TP ');
+     document.getElementById('pv-lx').textContent=o.x;
+     document.getElementById('pv-lp').textContent=o.p;
+     document.getElementById('pv-ldk').textContent=o.d;
+     document.getElementById('pv-ldkt').textContent=o.d?('Đặc khu — '+o.dk):'Đặc khu';
+     document.getElementById('pv-rowname').textContent=o.f;
+     document.getElementById('pv-rx').textContent=o.x;
+     document.getElementById('pv-rp').textContent=o.p;
+     document.getElementById('pv-rdk').textContent=o.d;
+     document.getElementById('pv-rtot').textContent=t;
+     document.getElementById('pv-area').textContent=o.a+' km²';
+     document.getElementById('pv-pop').textContent=o.pop+' người';
+     document.getElementById('pv-merge').textContent=(o.m==='Giữ nguyên'?'Đơn vị cũ: giữ nguyên (không sáp nhập).':('Hợp nhất từ: '+o.m+'.'))+(o.d?(' Đặc khu: '+o.dk+'.'):'');
+     var xe=o.x/t*100,pe=(o.x+o.p)/t*100;
+     document.getElementById('pv-donut').style.background='conic-gradient('+GREEN+' 0 '+xe+'%,'+GOLD+' '+xe+'% '+pe+'%,'+RED+' '+pe+'% 100%)';
+     var kids=menu.children;for(var i=0;i<kids.length;i++){kids[i].classList.toggle('active',kids[i].getAttribute('data-k')===o.n);}
+   }
+   P.forEach(function(o){var b=document.createElement('button');b.type='button';b.setAttribute('data-k',o.n);b.innerHTML='<span>'+o.n+'</span><span class="n">'+tot(o)+'</span>';b.onclick=function(ev){ev.stopPropagation();pick(o);menu.classList.remove('open');};menu.appendChild(b);});
+   btn.onclick=function(e){e.stopPropagation();menu.classList.toggle('open');};
+   document.addEventListener('click',function(){menu.classList.remove('open');});
+   var def=null;for(var i=0;i<P.length;i++){if(P[i].n==='TP Hải Phòng'){def=P[i];break;}}
+   pick(def||P[0]);
+  })();
+  </script>
 </div></section>
 
 <section><div class="wrap">
@@ -581,6 +775,55 @@ footer{padding:32px 0 60px;text-align:center;color:var(--muted);font-size:.84rem
   apply();
   sb.channel('sotay-live').on('postgres_changes',
     {event:'*',schema:'public',table:'sotay_images'}, apply).subscribe();
+})();
+</script>
+
+
+<script>
+(function(){
+  var RM = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var canHover = window.matchMedia && matchMedia('(hover:hover) and (pointer:fine)').matches;
+
+  /* ---------- 1) NỀN HẠT PARTICLE ĐỘNG ---------- */
+  try{
+    var cv=document.createElement('canvas'); cv.id='fx-particles';
+    document.body.insertBefore(cv, document.body.firstChild);
+    var ctx=cv.getContext('2d'), W=0,H=0,pts=[],DPR=Math.min(2,window.devicePixelRatio||1);
+    function rs(){W=cv.width=innerWidth*DPR; H=cv.height=innerHeight*DPR; cv.style.width=innerWidth+'px'; cv.style.height=innerHeight+'px';}
+    rs(); addEventListener('resize',rs);
+    var N=Math.max(28, Math.min(96, Math.round(innerWidth/15)));
+    for(var i=0;i<N;i++){pts.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.28*DPR,vy:(Math.random()-.5)*.28*DPR,r:(Math.random()*1.7+.6)*DPR,g:Math.random()<.22});}
+    var LINK=140*DPR, LINK2=LINK*LINK;
+    function frame(){
+      ctx.clearRect(0,0,W,H);
+      for(var i=0;i<pts.length;i++){var p=pts[i];p.x+=p.vx;p.y+=p.vy;
+        if(p.x<0||p.x>W)p.vx*=-1; if(p.y<0||p.y>H)p.vy*=-1;
+        ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,6.2832);
+        ctx.fillStyle=p.g?'rgba(240,200,90,.75)':'rgba(90,140,235,.7)';ctx.fill();}
+      for(var i=0;i<pts.length;i++)for(var j=i+1;j<pts.length;j++){
+        var a=pts[i],b=pts[j],dx=a.x-b.x,dy=a.y-b.y,d=dx*dx+dy*dy;
+        if(d<LINK2){ctx.strokeStyle='rgba(96,150,235,'+(0.16*(1-d/LINK2))+')';ctx.lineWidth=DPR;ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();}}
+      if(!RM) requestAnimationFrame(frame);
+    }
+    cv.style.opacity=RM?'.28':'.5';
+    frame();
+  }catch(e){}
+
+  /* ---------- 2) NGHIÊNG SÂU THEO CON TRỎ (TILT 3D) ---------- */
+  if(canHover && !RM){
+    var sel='.stat,.tier,.vcard,.gc,.formula,.fstep,.step,.chip,.gcard';
+    var els=document.querySelectorAll(sel), i;
+    for(i=0;i<els.length;i++){(function(el){
+      el.style.transformStyle='preserve-3d';
+      el.addEventListener('pointermove',function(e){
+        var r=el.getBoundingClientRect();
+        var px=(e.clientX-r.left)/r.width-0.5, py=(e.clientY-r.top)/r.height-0.5;
+        el.style.transform='perspective(880px) rotateX('+(-py*10).toFixed(2)+'deg) rotateY('+(px*12).toFixed(2)+'deg) translateY(-7px) scale(1.035)';
+        el.style.boxShadow='0 32px 66px -20px rgba(21,82,184,.6)';
+      });
+      el.addEventListener('pointerleave',function(){el.style.transform='';el.style.boxShadow='';});
+    })(els[i]);}
+  }
 })();
 </script>
 
