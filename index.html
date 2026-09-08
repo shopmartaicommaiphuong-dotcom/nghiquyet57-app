@@ -10,10 +10,10 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,600;0,700;0,800;0,900;1,600&family=Lora:ital,wght@1,500;1,600&display=swap">
 <style>
 :root{
-  --paper:#F6EFDF; --paper2:#FBF6EC; --card:#FFFFFF;
-  --ink:#182338; --ink2:#3C4761; --muted:#6B7690; --line:#E4DBC6; --line2:#D6CBB0;
-  --red:#C8202B; --red-d:#9C1720; --gold:#CD9A2A; --gold-d:#A97C16; --gold-l:#F0C24C;
-  --navy:#1B3A6B; --navy-d:#122A4F; --green:#2E7D50; --blue:#1E63B0;
+  --paper:#FBF3E2; --paper2:#FFFCF4; --card:#FFFDF7;
+  --ink:#23180B; --ink2:#4E3A22; --muted:#8A7455; --line:#EBD9B2; --line2:#DCC188;
+  --red:#9E1B22; --red-d:#6E0E13; --gold:#C6971E; --gold-d:#8F6710; --gold-l:#EAC85A;
+  --navy:#7A1220; --navy-d:#520B14; --green:#B8860B; --blue:#1E63B0;
   --maxw:1120px; --f:"Be Vietnam Pro",system-ui,sans-serif; --fq:"Lora",Georgia,serif;
   --sh:0 20px 44px -26px rgba(24,35,56,.42);
 }
@@ -21,9 +21,9 @@
 html{scroll-behavior:smooth}
 body{
   background:
-    radial-gradient(1100px 640px at 88% -6%, rgba(205,154,42,.16), transparent 60%),
-    radial-gradient(900px 560px at -6% 3%, rgba(200,32,43,.10), transparent 58%),
-    linear-gradient(180deg,var(--paper2),var(--paper) 40%,#F1E7D2);
+    radial-gradient(1100px 640px at 88% -6%, rgba(198,151,30,.26), transparent 60%),
+    radial-gradient(900px 560px at -6% 3%, rgba(158,27,34,.14), transparent 58%),
+    linear-gradient(180deg,var(--paper2),var(--paper) 42%,#F3E6C8);
   color:var(--ink); font-family:var(--f); font-weight:500; line-height:1.62; -webkit-font-smoothing:antialiased; overflow-x:hidden;
 }
 .wrap{max-width:var(--maxw);margin:0 auto;padding:0 22px}
@@ -306,6 +306,43 @@ footer{padding:32px 0 60px;text-align:center;color:var(--muted);font-size:.84rem
 </style>
 
 <style>
+/* ============================================================
+   TÔNG MÀU AVG — VÀNG GOLD · ĐỎ ĐÔ · ĐEN (nền kem sáng)
+   Phủ sau cùng nên ghi đè base; sang trọng, cổ điển.
+   ============================================================ */
+:root{
+  --paper:#FBF3E2; --paper2:#FFFCF4; --card:#FFFDF7;
+  --ink:#23180B; --ink2:#4E3A22; --muted:#8A7455; --line:#EBD9B2; --line2:#DCC188;
+  --red:#9E1B22; --red-d:#6E0E13; --gold:#C6971E; --gold-d:#8F6710; --gold-l:#EAC85A;
+  --goldgrad:linear-gradient(90deg,#8F6710,#EAC85A 45%,#C6971E 60%,#8F6710);
+}
+/* Tiêu đề mục: đỏ đô + gạch chân vàng gradient sang trọng */
+.sec-h h2{color:var(--red-d)}
+.sec-h h2::after{content:"";display:block;height:3px;width:96px;margin:12px 0 0;border-radius:3px;
+  background:var(--goldgrad);box-shadow:0 1px 3px rgba(143,103,16,.5)}
+.sec-h.reveal h2::after,.sec-h[style*="center"] h2::after{margin-left:auto;margin-right:auto}
+/* Nhãn eyebrow kiểu thẻ vàng viền gold, chữ đỏ đô */
+.eyebrow{color:var(--red-d);background:linear-gradient(180deg,#FFF7E4,#F6E7C2);
+  border:1px solid var(--gold-l);padding:5px 13px;border-radius:100px;
+  box-shadow:0 3px 8px rgba(143,103,16,.22),inset 0 1px 0 #fff}
+/* Khung vàng kép sang trọng cho các khối chính (không dùng ::before nên không đụng hiệu ứng cũ) */
+.panel,.formula,.tier,.stat,.tbl3d,.pv-mapstage,.tabpane .panel,.ladder .step,.figure{
+  box-shadow:0 0 0 1px var(--gold-l),0 0 0 4px rgba(198,151,30,.14),0 18px 40px -24px rgba(70,40,10,.5) !important}
+/* Đường viền vàng mảnh cho card & chip */
+.chip,.pill,.flagstripe,.lvl{border-color:var(--gold-l)!important}
+/* Header/nav (nếu có) nền kem + gạch vàng dưới */
+header,.nav,.topbar,.site-header{border-bottom:2px solid transparent;border-image:var(--goldgrad) 1}
+/* Nút/eq đỏ đô chuyển gradient đỏ→vàng nhẹ ở mép */
+.eq{background:linear-gradient(135deg,var(--red),var(--red-d))!important;
+  box-shadow:0 0 0 1px var(--gold-l),0 16px 28px -14px rgba(110,14,19,.7)!important}
+/* Dải phân cách vàng-đỏ-đen giữa các section (giống sóng chân banner) */
+section+section{border-top:1px solid rgba(198,151,30,.28)}
+section+section::after{content:"";position:absolute;top:-2px;left:50%;transform:translateX(-50%);
+  width:220px;height:4px;border-radius:4px;background:var(--goldgrad);opacity:.9;pointer-events:none}
+/* Bản đồ: khung nền kem vàng ánh gold cho hợp tông */
+.pv-mapstage{background:linear-gradient(160deg,#FFFDF6 0%,#FBF1D8 65%,#F5E7C2 100%)!important;
+  border:1px solid var(--gold-l)!important}
+.pv-maptitle{color:var(--red-d)!important}
 /* Ảnh thư viện "Tìm hiểu NQ57" TO HẾT CỠ — full bề ngang, 1 cột */
 #sb-gallery{columns:1 !important;column-gap:0 !important;display:block !important}
 #sb-gallery .gcard{width:100% !important;margin:0 0 26px !important;break-inside:avoid}
