@@ -878,6 +878,20 @@ body>section,body>header,body>footer{position:relative;z-index:1}
 .org-plink.mem{background:linear-gradient(135deg,#188a4e,#0e5d34)}
 .org-sub{color:#5b6b86;font-weight:700;font-size:.9rem;margin:16px 0 6px}
 .org-empty{color:#8aa;font-size:.9rem;padding:10px 0}
+/* Slider ảnh chạy liên tục phải→trái */
+.org-slider{overflow:hidden;border-radius:16px;margin:14px 0;position:relative;box-shadow:0 14px 30px rgba(20,40,90,.15);background:#0f2c63}
+.org-slider::before,.org-slider::after{content:"";position:absolute;top:0;bottom:0;width:60px;z-index:2;pointer-events:none}
+.org-slider::before{left:0;background:linear-gradient(90deg,rgba(15,44,99,.65),transparent)}
+.org-slider::after{right:0;background:linear-gradient(270deg,rgba(15,44,99,.65),transparent)}
+.org-track{display:flex;gap:14px;width:max-content;padding:12px;animation:orgscroll linear infinite}
+.org-slider:hover .org-track{animation-play-state:paused}
+.org-slide{flex:0 0 auto;width:min(78vw,330px);aspect-ratio:16/9;border-radius:13px;overflow:hidden;background:#dde6f3;box-shadow:0 10px 22px rgba(0,0,0,.28);position:relative}
+.org-slide img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s cubic-bezier(.2,.7,.2,1)}
+.org-slide::after{content:"";position:absolute;top:0;left:-80%;width:55%;height:100%;background:linear-gradient(115deg,transparent,rgba(255,255,255,.4),transparent);transform:skewX(-20deg);transition:left .8s}
+.org-slide:hover img{transform:scale(1.07)}
+.org-slide:hover::after{left:140%}
+@keyframes orgscroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@media (prefers-reduced-motion:reduce){.org-track{animation:none}}
 </style>
 
 <section class="org-sec"><div class="wrap">
@@ -902,6 +916,9 @@ body>section,body>header,body>footer{position:relative;z-index:1}
   function nl(s){return esc(s).replace(/\n/g,'<br>');}
   function inits(n){n=(n||'').trim().split(/\s+/);var a=n.length?n[n.length-2]||n[0]:'';var b=n.length?n[n.length-1]:'';return((a[0]||'')+(b[0]||'')).toUpperCase()||'★';}
   var state={active:{}};
+  var SLIDES=[];
+  function slidesOf(type,id){return SLIDES.filter(function(s){return s.owner_type===type&&String(s.owner_id)===String(id);}).sort(function(a,b){return (a.display_order-b.display_order)||(a.id-b.id);});}
+  function sliderHTML(list,secs){if(!list.length)return '';var s=(+secs>0?+secs:30);var im=list.map(function(x){return '<div class="org-slide"><img loading="lazy" src="'+esc(x.image_url)+'" alt=""></div>';}).join('');return '<div class="org-slider"><div class="org-track" style="animation-duration:'+s+'s">'+im+im+'</div></div>';}
 
   function personCard(p){
     var photo=p.photo_url?('<div class="op-photo"><img loading="lazy" src="'+esc(p.photo_url)+'" alt=""></div>')
@@ -915,6 +932,7 @@ body>section,body>header,body>footer{position:relative;z-index:1}
   function renderBlock(el,block,tabs,peopleByTab){
     var tabsHtml=tabs.map(function(t){return '<button class="org-tab" data-t="'+t.id+'">'+esc(t.name)+'</button>';}).join('');
     el.innerHTML='<div class="org-mod-h"><div class="ic">🏛️</div><div><h2>'+esc(block.title)+'</h2>'+(block.subtitle?'<p>'+esc(block.subtitle)+'</p>':'')+'</div></div>'+
+      sliderHTML(slidesOf('block',block.id),block.slide_secs)+
       '<div class="org-grid"><div class="org-tabs">'+tabsHtml+'</div><div class="org-detail" id="det-'+block.id+'"></div></div>';
     function show(tid){
       state.active[block.id]=tid;
@@ -923,6 +941,7 @@ body>section,body>header,body>footer{position:relative;z-index:1}
       var ppl=(peopleByTab[tid]||[]);
       var det=el.querySelector('#det-'+block.id);
       det.innerHTML=(t&&t.intro?'<p class="intro">'+esc(t.intro)+'</p>':'')+
+        sliderHTML(slidesOf('tab',tid),t&&t.slide_secs)+
         (ppl.length?('<div class="org-people">'+ppl.map(personCard).join('')+'</div>'):'<div class="org-empty">Chưa có thành viên.</div>');
     }
     el.querySelectorAll('.org-tab').forEach(function(b){b.onclick=function(){show(+b.getAttribute('data-t'));};});
@@ -958,9 +977,11 @@ body>section,body>header,body>footer{position:relative;z-index:1}
       sb.from('org_blocks').select('*').eq('active',true),
       sb.from('org_tabs').select('*').eq('active',true),
       sb.from('org_people').select('*').eq('active',true),
-      sb.from('org_links').select('*').eq('active',true)
+      sb.from('org_links').select('*').eq('active',true),
+      sb.from('org_slides').select('*').eq('active',true)
     ]).then(function(r){
-      if(r.some(function(x){return x.error;}))return;
+      if(r[0].error||r[1].error||r[2].error||r[3].error||r[4].error)return;
+      SLIDES=((r[5]&&r[5].data)||[]);
       render({
         profile:(r[0].data||[]).sort(ord), blocks:(r[1].data||[]).sort(ord),
         tabs:(r[2].data||[]).sort(ord), people:(r[3].data||[]).sort(ord), links:(r[4].data||[]).sort(ord)
@@ -976,6 +997,7 @@ body>section,body>header,body>footer{position:relative;z-index:1}
     .on('postgres_changes',{event:'*',schema:'public',table:'org_tabs'},load)
     .on('postgres_changes',{event:'*',schema:'public',table:'org_people'},load)
     .on('postgres_changes',{event:'*',schema:'public',table:'org_links'},load)
+    .on('postgres_changes',{event:'*',schema:'public',table:'org_slides'},load)
     .subscribe();
 })();
 </script>

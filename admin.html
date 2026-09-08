@@ -75,6 +75,14 @@ textarea.inp{resize:vertical;min-height:60px;line-height:1.45}
 .pcard .ph .noimg{position:absolute;inset:0;display:grid;place-items:center;color:#8aa;font-size:12px}
 .pcard .pad{padding:10px;display:flex;flex-direction:column;gap:6px}
 .hint{color:var(--mut);font-size:12.5px}
+.slidebox{background:#f2f6fd;border:1px dashed #c7d5ec;border-radius:12px;padding:10px;margin:-4px 0 12px}
+.sbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;font-size:13px;margin-bottom:8px;font-weight:700;color:#2a3a56}
+.sthumbs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.sthumb{width:112px;height:64px;border-radius:8px;overflow:hidden;position:relative;background:#dde6f3;box-shadow:0 4px 10px rgba(0,0,0,.14)}
+.sthumb img{width:100%;height:100%;object-fit:cover;display:block}
+.sthumb .sacts{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:center;gap:3px;background:rgba(15,44,99,.72);padding:2px}
+.sthumb .sacts button{border:0;background:#fff;color:#132038;border-radius:5px;font-size:11px;cursor:pointer;padding:1px 6px;font-weight:800}
+.sdz{min-height:64px;width:100%}
 .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(30px);opacity:0;pointer-events:none;background:#0f2c63;color:#fff;padding:12px 20px;border-radius:13px;font-weight:600;box-shadow:var(--shadow);transition:.3s;z-index:90;max-width:90vw;text-align:center}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1}.toast.err{background:var(--red)}.toast.ok{background:var(--green)}
 .busy{position:fixed;inset:0;background:rgba(238,243,251,.72);backdrop-filter:blur(3px);display:none;place-items:center;z-index:80}.busy.show{display:grid}
@@ -172,7 +180,7 @@ var SLOTS={hero:{name:"Ảnh Hero (đầu trang)",ic:"i-hero",emoji:"🏙️",de
   vientruong:{name:"Ảnh Viện trưởng",ic:"i-vt",emoji:"👤",desc:"Ngay dưới Poster Đề án.",single:true},
   gallery:{name:"Thư viện “Tìm hiểu NQ57”",ic:"i-gal",emoji:"🖼️",desc:"Thêm/bớt/sắp xếp thoải mái. Kéo-thả nhiều ảnh cùng lúc.",single:false}};
 var cfgOK=window.SB_URL&&window.SB_ANON&&!SB_URL.includes('YOUR-')&&!SB_ANON.includes('YOUR-');
-var sb=null,rows=[],D={blocks:[],tabs:[],people:[],links:[],profile:[]},cur={block:null,tab:null};
+var sb=null,rows=[],D={blocks:[],tabs:[],people:[],links:[],profile:[],slides:[]},cur={block:null,tab:null};
 var $=function(s,r){return (r||document).querySelector(s);};
 function busy(v){$('#busy').classList.toggle('show',v);}
 function toast(t,k){var e=$('#toast');e.textContent=t;e.className='toast show '+(k||'');clearTimeout(e._t);e._t=setTimeout(function(){e.className='toast';},2600);}
@@ -215,7 +223,7 @@ function dropzone(el,multiple,cb){
 var chan=null;
 function subscribe(){if(chan)return;chan=sb.channel('admin-all');
   chan.on('postgres_changes',{event:'*',schema:'public',table:'sotay_images'},loadImages);
-  ['org_blocks','org_tabs','org_people','org_links','org_profile'].forEach(function(t){chan.on('postgres_changes',{event:'*',schema:'public',table:t},loadOrg);});
+  ['org_blocks','org_tabs','org_people','org_links','org_profile','org_slides'].forEach(function(t){chan.on('postgres_changes',{event:'*',schema:'public',table:t},loadOrg);});
   chan.subscribe();}
 
 /* ============================================================ ẢNH SỔ TAY ============================================================ */
@@ -269,6 +277,7 @@ async function addImgs(slot,files){busy(true);var base=bySlot(slot).length?Math.
 async function loadOrg(){var r=await Promise.all([sb.from('org_blocks').select('*'),sb.from('org_tabs').select('*'),sb.from('org_people').select('*'),sb.from('org_links').select('*'),sb.from('org_profile').select('*')]);
   if(r.some(function(x){return x.error;})){return;}
   D.blocks=(r[0].data||[]).sort(ord);D.tabs=(r[1].data||[]).sort(ord);D.people=(r[2].data||[]).sort(ord);D.links=(r[3].data||[]).sort(ord);D.profile=(r[4].data||[]).sort(ord);
+  try{var sr=await sb.from('org_slides').select('*');D.slides=(!sr.error&&sr.data)?sr.data.sort(ord):[];}catch(e){D.slides=[];}
   renderBlocks();renderTabs();renderPeople();renderLinks();renderProfile();}
 async function ins(t,d){busy(true);var r=await sb.from(t).insert(d);busy(false);r.error?toast('Lỗi: '+r.error.message,'err'):toast('Đã thêm ✓','ok');}
 async function upd(t,id,d){busy(true);var r=await sb.from(t).update(d).eq('id',id);busy(false);r.error?toast('Lỗi: '+r.error.message,'err'):toast('Đã lưu ✓','ok');}
@@ -282,7 +291,7 @@ function renderBlocks(){var el=$('#blockList');el.innerHTML='';
     d.querySelector('[data-a=pick]').onclick=function(){cur.block=b.id;cur.tab=null;renderBlocks();renderTabs();renderPeople();};
     d.querySelector('[data-a=tg]').onclick=function(){upd('org_blocks',b.id,{active:!b.active});};
     d.querySelector('[data-a=del]').onclick=function(){if(confirm('Xóa Module + toàn bộ bên trong?')){if(cur.block===b.id){cur.block=null;cur.tab=null;}del('org_blocks',b.id);}};
-    el.appendChild(d);});
+    el.appendChild(d);el.appendChild(slidesPanel('block',b.id,b.slide_secs));});
   if(!D.blocks.length)el.innerHTML='<p class="hint">Chưa có Module.</p>';}
 $('#addBlock').onclick=function(){ins('org_blocks',{title:'Module mới',subtitle:'',display_order:nextOrd(D.blocks),active:true});};
 
@@ -297,7 +306,7 @@ function renderTabs(){var sec=$('#tabSec');if(!cur.block){sec.hidden=true;return
     d.querySelector('[data-a=del]').onclick=function(){if(confirm('Xóa hội đồng + thành viên?')){if(cur.tab===t.id)cur.tab=null;del('org_tabs',t.id);}};
     d.querySelector('[data-a=up]').onclick=function(){move('org_tabs',list,t.id,-1);};
     d.querySelector('[data-a=down]').onclick=function(){move('org_tabs',list,t.id,1);};
-    el.appendChild(d);});
+    el.appendChild(d);el.appendChild(slidesPanel('tab',t.id,t.slide_secs));});
   if(!list.length)el.innerHTML='<p class="hint">Chưa có hội đồng.</p>';}
 $('#addTab').onclick=function(){if(!cur.block)return;ins('org_tabs',{block_id:cur.block,name:'Hội đồng mới',intro:'',display_order:nextOrd(D.tabs.filter(function(t){return t.block_id===cur.block;})),active:true});};
 
@@ -316,6 +325,23 @@ function renderPeople(){var sec=$('#peopleSec');if(!cur.tab){sec.hidden=true;ret
   if(!list.length)el.innerHTML='<p class="hint">Chưa có thành viên.</p>';}
 $('#addPerson').onclick=function(){if(!cur.tab)return;ins('org_people',{tab_id:cur.tab,name:'Họ tên',title:'',bio:'',link:'',display_order:nextOrd(D.people.filter(function(p){return p.tab_id===cur.tab;})),active:true});};
 async function replacePersonPhoto(p,file){if(!file)return;busy(true);try{var u=await uploadFile(file,'people');if(p.storage_path)await sb.storage.from('sotay').remove([p.storage_path]);var r=await sb.from('org_people').update({photo_url:u.url,storage_path:u.path}).eq('id',p.id);if(r.error)throw r.error;toast('Đã cập nhật ảnh ✓','ok');}catch(e){toast('Lỗi ảnh: '+(e.message||e),'err');}busy(false);}
+
+/* ---- SLIDER ẢNH cho Module/Hội đồng ---- */
+function slidesPanel(type,ownerId,secs){
+  var wrap=document.createElement('div');wrap.className='slidebox';
+  var list=D.slides.filter(function(s){return s.owner_type===type&&s.owner_id===ownerId;}).sort(ord);
+  var thumbs=list.map(function(s){return '<div class="sthumb"><img src="'+esc(s.image_url)+'"><div class="sacts"><button data-a="up" data-id="'+s.id+'">▲</button><button data-a="down" data-id="'+s.id+'">▼</button><button data-a="del" data-id="'+s.id+'">✕</button></div></div>';}).join('');
+  wrap.innerHTML='<div class="sbar">🖼️ Slide ảnh ('+list.length+') <label class="chk">Số giây trượt <input class="inp secs" type="number" min="1" value="'+(secs||30)+'" style="width:78px"></label> <span class="hint">số nhỏ = chạy nhanh</span></div>'+
+    '<div class="sthumbs">'+thumbs+'</div><div class="dz sdz"><div><div class="plus">＋</div>Thêm ảnh slide — bấm hoặc kéo-thả (chọn nhiều ảnh)</div></div>';
+  wrap.querySelector('.secs').addEventListener('change',function(){upd(type==='block'?'org_blocks':'org_tabs',ownerId,{slide_secs:(+this.value||30)});});
+  wrap.querySelectorAll('.sthumb button').forEach(function(b){b.onclick=function(){var id=+b.getAttribute('data-id'),a=b.getAttribute('data-a');
+    if(a==='del'){var s=list.find(function(x){return x.id===id;});if(confirm('Xóa ảnh slide này?')){if(s&&s.storage_path)sb.storage.from('sotay').remove([s.storage_path]);del('org_slides',id);}}
+    else move('org_slides',list,id,a==='up'?-1:1);};});
+  dropzone(wrap.querySelector('.sdz'),true,function(fs){addSlides(type,ownerId,fs);});
+  return wrap;
+}
+async function addSlides(type,ownerId,files){busy(true);var list=D.slides.filter(function(s){return s.owner_type===type&&s.owner_id===ownerId;});var base=list.length?Math.max.apply(null,list.map(function(x){return x.display_order||0;})):0;
+  try{for(var i=0;i<files.length;i++){var u=await uploadFile(files[i],'slides');var r=await sb.from('org_slides').insert({owner_type:type,owner_id:ownerId,image_url:u.url,storage_path:u.path,display_order:base+i+1,active:true});if(r.error)throw r.error;}toast('Đã thêm '+files.length+' ảnh slide ✓','ok');}catch(e){toast('Lỗi: '+(e.message||e),'err');}busy(false);}
 
 function renderLinks(){var el=$('#linkList');el.innerHTML='';
   D.links.forEach(function(l){var d=document.createElement('div');d.className='row2';
