@@ -491,27 +491,62 @@ body>section,body>header,body>footer{position:relative;z-index:1}
    .pv-menu-big button{font-size:1rem;padding:13px 15px}
    .pv-menu-big button .n{font-size:.92rem}
    .pv-fixed{background:linear-gradient(145deg,#F6C945,#D4A017);color:#3a2a00;font-weight:800;padding:8px 16px;border-radius:11px;font-size:.9rem;box-shadow:0 6px 16px rgba(212,160,23,.42);white-space:nowrap}
-   /* ===== Sa bàn nổi 3D bản đồ Việt Nam ===== */
+   /* ===== Bản đồ Việt Nam NHIỀU MÀU nền sáng (sa bàn nổi nhẹ) ===== */
    .pv-split{grid-template-columns:1fr 1fr;align-items:stretch}
    @media(max-width:900px){.pv-split{grid-template-columns:1fr}}
    .pv-left{display:flex;flex-direction:column;gap:20px}
    .pv-right{display:flex;align-items:center;justify-content:center;perspective:1300px}
-   .pv-mapstage{width:100%;max-width:430px;margin:0 auto;padding:14px;border-radius:22px;
-     background:radial-gradient(120% 90% at 50% 8%,#12325c,#0a1a34 70%);
-     box-shadow:0 30px 60px rgba(0,0,0,.55),inset 0 2px 0 rgba(255,255,255,.06);
-     transform:rotateX(16deg) rotateZ(-1deg);transform-style:preserve-3d;transition:transform .5s ease}
-   .pv-right:hover .pv-mapstage{transform:rotateX(8deg) rotateZ(0deg)}
-   .pv-maptitle{position:absolute;left:16px;top:10px;font-size:.72rem;font-weight:800;letter-spacing:.4px;color:#9fc0f2;text-transform:uppercase;opacity:.85}
-   .vnmap{width:100%;height:auto;display:block;overflow:visible;filter:drop-shadow(0 14px 22px rgba(0,0,0,.5))}
-   .vnp{fill:#2f5f9e;stroke:#0c1f3c;stroke-width:.7;stroke-linejoin:round;
+   .pv-mapstage{position:relative;width:100%;max-width:430px;margin:0 auto;padding:16px;border-radius:22px;
+     background:linear-gradient(160deg,#ffffff 0%,#eaf2fc 65%,#dfeafb 100%);
+     border:1px solid #d5e2f4;
+     box-shadow:0 20px 44px rgba(40,80,140,.20),inset 0 1px 0 #ffffff;
+     transform:rotateX(12deg) rotateZ(-1deg);transform-style:preserve-3d;transition:transform .5s ease}
+   .pv-right:hover .pv-mapstage{transform:rotateX(6deg) rotateZ(0deg)}
+   .pv-maptitle{position:absolute;left:18px;top:11px;font-size:.72rem;font-weight:800;letter-spacing:.4px;color:#2a4a7f;text-transform:uppercase;opacity:.9}
+   .vnmap{width:100%;height:auto;display:block;overflow:visible;filter:drop-shadow(0 10px 16px rgba(40,70,120,.28))}
+   .vnp{fill:#cdd8e8;stroke:#ffffff;stroke-width:1;stroke-linejoin:round;
      transition:fill .35s ease,filter .35s ease,transform .35s ease;
-     filter:drop-shadow(0 1.4px 0 #0a1830) drop-shadow(0 2.6px 1px rgba(0,0,0,.4));cursor:pointer}
-   .vnp:hover{fill:#4a86d8}
-   .vnp.lit{fill:#ffd23f;stroke:#8a5a00;
-     filter:drop-shadow(0 0 5px #ffe27a) drop-shadow(0 0 14px #ffb300) drop-shadow(0 0 26px rgba(255,179,0,.7));
+     filter:drop-shadow(0 1px 0 rgba(120,140,170,.6));cursor:pointer}
+   .vnp:hover{filter:brightness(1.12) drop-shadow(0 2px 3px rgba(0,0,0,.25))}
+   .vnp[data-k="hanoi"]{fill:#e0362c}
+   .vnp[data-k="caobang"]{fill:#4a90d9}
+   .vnp[data-k="tuyenquang"]{fill:#7cb342}
+   .vnp[data-k="dienbien"]{fill:#5b8fd6}
+   .vnp[data-k="laichau"]{fill:#4a90d9}
+   .vnp[data-k="sonla"]{fill:#f5a623}
+   .vnp[data-k="laocai"]{fill:#f39c12}
+   .vnp[data-k="thainguyen"]{fill:#f5a623}
+   .vnp[data-k="langson"]{fill:#e0362c}
+   .vnp[data-k="quangninh"]{fill:#7cb342}
+   .vnp[data-k="bacninh"]{fill:#26a69a}
+   .vnp[data-k="phutho"]{fill:#d081c9}
+   .vnp[data-k="haiphong"]{fill:#8e6fc0}
+   .vnp[data-k="hungyen"]{fill:#4a90d9}
+   .vnp[data-k="ninhbinh"]{fill:#f5a623}
+   .vnp[data-k="thanhhoa"]{fill:#f6d02f}
+   .vnp[data-k="nghean"]{fill:#f6d02f}
+   .vnp[data-k="hatinh"]{fill:#f5a623}
+   .vnp[data-k="quangtri"]{fill:#26a69a}
+   .vnp[data-k="hue"]{fill:#9ccc65}
+   .vnp[data-k="danang"]{fill:#4a90d9}
+   .vnp[data-k="quangngai"]{fill:#7cb342}
+   .vnp[data-k="gialai"]{fill:#f5a623}
+   .vnp[data-k="khanhhoa"]{fill:#e0362c}
+   .vnp[data-k="daklak"]{fill:#d081c9}
+   .vnp[data-k="lamdong"]{fill:#e0362c}
+   .vnp[data-k="dongnai"]{fill:#8a9bb0}
+   .vnp[data-k="hcm"]{fill:#e0362c}
+   .vnp[data-k="tayninh"]{fill:#7cb342}
+   .vnp[data-k="dongthap"]{fill:#ec7fae}
+   .vnp[data-k="vinhlong"]{fill:#4a90d9}
+   .vnp[data-k="angiang"]{fill:#d081c9}
+   .vnp[data-k="cantho"]{fill:#f6d02f}
+   .vnp[data-k="camau"]{fill:#4aa3df}
+   .vnp.lit{fill:#ffcc16 !important;stroke:#c98a00;
+     filter:drop-shadow(0 0 4px #ffe680) drop-shadow(0 0 13px #ffb300) drop-shadow(0 0 26px rgba(255,170,0,.9));
      animation:pvlit 1.5s ease-in-out infinite}
-   @keyframes pvlit{0%,100%{filter:drop-shadow(0 0 5px #ffe27a) drop-shadow(0 0 12px #ffb300) drop-shadow(0 0 22px rgba(255,179,0,.6))}
-     50%{filter:drop-shadow(0 0 8px #fff0b3) drop-shadow(0 0 20px #ffc107) drop-shadow(0 0 40px rgba(255,193,7,.9))}}
+   @keyframes pvlit{0%,100%{filter:drop-shadow(0 0 4px #ffe680) drop-shadow(0 0 11px #ffb300) drop-shadow(0 0 20px rgba(255,170,0,.75))}
+     50%{filter:drop-shadow(0 0 8px #fff3c0) drop-shadow(0 0 20px #ffc107) drop-shadow(0 0 40px rgba(255,193,7,1))}}
    @media(prefers-reduced-motion:reduce){.vnp.lit{animation:none}.pv-mapstage{transform:none}}
   </style>
   <div class="split pv-split" id="pv-wrap">
