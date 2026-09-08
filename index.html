@@ -442,7 +442,16 @@ body>section,body>header,body>footer{position:relative;z-index:1}
 </div></section>
 
 <section><div class="wrap">
-  <div class="sec-h reveal"><span class="eyebrow">Bức tranh đơn vị hành chính</span><h2>Cơ cấu xã / phường / đặc khu</h2><p>Sau sắp xếp, bộ máy tinh gọn — trách nhiệm dồn về cơ sở.</p></div>
+  <div class="pv-sechead reveal">
+    <div class="sec-h"><span class="eyebrow">Bức tranh đơn vị hành chính</span><h2>Cơ cấu xã / phường / đặc khu</h2><p>Sau sắp xếp, bộ máy tinh gọn — trách nhiệm dồn về cơ sở.</p></div>
+    <div class="pv-bigsel">
+      <div class="pv-neon">BẤM CHỌN TỈNH THÀNH</div>
+      <div class="pv-selWrap">
+        <button class="pv-selBtn pv-selBtn-big" id="pv-selBtn" type="button" aria-haspopup="listbox"><span id="pv-selLabel">TP Hải Phòng</span><b>▾</b></button>
+        <div class="pv-menu pv-menu-big" id="pv-menu" role="listbox"></div>
+      </div>
+    </div>
+  </div>
   <style>
    .pv-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
    .pv-selWrap{position:relative}
@@ -462,15 +471,25 @@ body>section,body>header,body>footer{position:relative;z-index:1}
    .pv-hole{position:absolute;inset:25%;border-radius:50%;background:radial-gradient(circle at 50% 38%,#143257,#0a1c38);display:grid;place-items:center;text-align:center;box-shadow:inset 0 7px 20px rgba(0,0,0,.55)}
    .pv-num{font-size:2.7rem;font-weight:800;color:#fff;line-height:1}
    .pv-hole small{display:block;color:#bcd0f2;font-weight:700;font-size:.82rem;margin-top:2px}
+   .pv-sechead{display:flex;justify-content:space-between;align-items:flex-end;gap:22px;flex-wrap:wrap;margin-bottom:16px}
+   .pv-sechead .sec-h{margin:0}
+   .pv-bigsel{flex:1 1 330px;max-width:560px;text-align:right}
+   @media(max-width:760px){.pv-bigsel{text-align:left;width:100%}}
+   .pv-neon{font-size:clamp(1.35rem,3.4vw,2.15rem);font-weight:800;letter-spacing:.6px;color:#0f2c63;margin:0 0 12px;line-height:1.15;animation:pvneon 1.5s ease-in-out infinite}
+   @keyframes pvneon{0%,100%{text-shadow:0 0 8px rgba(47,123,230,.75),0 0 20px rgba(47,123,230,.45),0 2px 2px rgba(0,0,0,.14);transform:scale(1)}50%{text-shadow:0 0 13px rgba(212,160,23,.95),0 0 30px rgba(224,87,79,.6),0 2px 2px rgba(0,0,0,.14);transform:scale(1.03)}}
+   @media(prefers-reduced-motion:reduce){.pv-neon{animation:none;text-shadow:0 0 10px rgba(47,123,230,.6)}}
+   .pv-selBtn-big{width:100%;justify-content:space-between;font-size:1.18rem;padding:16px 22px;border-radius:16px;box-shadow:0 12px 26px rgba(212,160,23,.5)}
+   .pv-selBtn-big b{font-size:1rem}
+   .pv-menu-big{width:100%;max-height:60vh;border-radius:16px;padding:8px}
+   .pv-menu-big button{font-size:1rem;padding:13px 15px}
+   .pv-menu-big button .n{font-size:.92rem}
+   .pv-fixed{background:linear-gradient(145deg,#F6C945,#D4A017);color:#3a2a00;font-weight:800;padding:8px 16px;border-radius:11px;font-size:.9rem;box-shadow:0 6px 16px rgba(212,160,23,.42);white-space:nowrap}
   </style>
   <div class="split" id="pv-wrap">
    <div class="reveal"><div class="panel">
      <div class="pv-head">
        <div class="pt" id="pv-title">Cơ cấu 114 đơn vị · Hải Phòng</div>
-       <div class="pv-selWrap">
-         <button class="pv-selBtn" id="pv-selBtn" type="button" aria-haspopup="listbox"><span id="pv-selLabel">TP Hải Phòng</span><b>▾</b></button>
-         <div class="pv-menu" id="pv-menu" role="listbox"></div>
-       </div>
+       <span class="pv-fixed" id="pv-fixedname">Hải Phòng</span>
      </div>
      <div class="pv-donutBox">
        <div class="pv-donut" id="pv-donut" style="background:conic-gradient(#3ECB72 0 58.8%,#F3C64E 58.8% 98.2%,#F1584D 98.2% 100%)">
@@ -542,6 +561,7 @@ body>section,body>header,body>footer{position:relative;z-index:1}
      var t=tot(o);
      document.getElementById('pv-title').textContent='Cơ cấu '+t+' đơn vị · '+o.n;
      document.getElementById('pv-selLabel').textContent=o.n;
+     var fx=document.getElementById('pv-fixedname');if(fx)fx.textContent=o.n;
      document.getElementById('pv-total').textContent=t;
      document.getElementById('pv-name').textContent=o.n.replace(/^TP /,'TP ');
      document.getElementById('pv-lx').textContent=o.x;
