@@ -348,8 +348,8 @@ body{position:relative}
 #avg-decor{position:absolute;left:0;top:0;width:100%;height:100%;z-index:0;pointer-events:none;overflow:hidden}
 #avg-decor .band{position:absolute;left:0;width:100%;line-height:0}
 #avg-decor .band svg{width:100%;height:auto;display:block}
-#avg-decor .mid{top:44%;opacity:.16}
-#avg-decor .mid.mid2{top:70%;opacity:.13;transform:scaleX(-1)}
+#avg-decor .mid{top:42%;opacity:.5}
+#avg-decor .mid.mid2{top:64%;opacity:.4;transform:scaleX(-1)}
 #avg-decor .bot{bottom:0;opacity:.55}
 @media(max-width:760px){#avg-decor .mid{opacity:.12}#avg-decor .bot{opacity:.45}}
 /* Ảnh thư viện "Tìm hiểu NQ57" TO HẾT CỠ — full bề ngang, 1 cột */
@@ -912,24 +912,31 @@ body>section,body>header,body>footer{position:relative;z-index:1}
 
 
 <div id="avg-decor" aria-hidden="true">
-  <!-- Dải sóng NỀN GIỮA (mảnh, mờ, uốn lượn) -->
+  <!-- Dải sóng NỀN GIỮA — BA DẢI TO BẢN vàng/đỏ/đen (giống chân banner) -->
   <div class="band mid">
-    <svg viewBox="0 0 1440 200" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <svg viewBox="0 0 1440 300" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
       <defs>
-        <linearGradient id="agGold" x1="0" y1="0" x2="1" y2="0">
+        <linearGradient id="agGoldMid" x1="0" y1="0" x2="1" y2="0">
           <stop offset="0" stop-color="#8F6710"/><stop offset=".45" stop-color="#EAC85A"/>
-          <stop offset=".6" stop-color="#C6971E"/><stop offset="1" stop-color="#8F6710"/>
+          <stop offset=".62" stop-color="#F3D877"/><stop offset="1" stop-color="#8F6710"/>
+        </linearGradient>
+        <linearGradient id="agRedMid" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#6E0E13"/><stop offset=".5" stop-color="#B8202A"/><stop offset="1" stop-color="#6E0E13"/>
         </linearGradient>
       </defs>
-      <path d="M0,120 C240,60 480,60 720,110 C960,160 1200,160 1440,100" fill="none" stroke="url(#agGold)" stroke-width="10"/>
-      <path d="M0,150 C260,100 520,110 720,140 C980,180 1220,120 1440,140" fill="none" stroke="#9E1B22" stroke-width="7"/>
-      <path d="M0,90 C300,150 560,150 760,110 C1000,60 1240,70 1440,60" fill="none" stroke="#1A120A" stroke-width="4" opacity=".7"/>
+      <!-- ĐEN (sau) -->
+      <path d="M0,196 C360,132 720,132 1080,196 C1260,228 1350,232 1440,220 L1440,300 C1350,290 1260,286 1080,246 C720,182 360,182 0,246 Z" fill="#1A120A"/>
+      <!-- ĐỎ ĐÔ (giữa) -->
+      <path d="M0,128 C360,64 720,64 1080,128 C1260,160 1350,164 1440,152 L1440,232 C1350,222 1260,218 1080,178 C720,114 360,114 0,178 Z" fill="url(#agRedMid)"/>
+      <!-- VÀNG GOLD (trước) -->
+      <path d="M0,62 C360,0 720,0 1080,62 C1260,94 1350,98 1440,86 L1440,166 C1350,156 1260,152 1080,112 C720,48 360,48 0,112 Z" fill="url(#agGoldMid)"/>
     </svg>
   </div>
   <div class="band mid mid2">
-    <svg viewBox="0 0 1440 200" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M0,120 C240,60 480,60 720,110 C960,160 1200,160 1440,100" fill="none" stroke="url(#agGold)" stroke-width="9"/>
-      <path d="M0,150 C260,100 520,110 720,140 C980,180 1220,120 1440,140" fill="none" stroke="#9E1B22" stroke-width="6"/>
+    <svg viewBox="0 0 1440 300" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M0,196 C360,132 720,132 1080,196 C1260,228 1350,232 1440,220 L1440,300 C1350,290 1260,286 1080,246 C720,182 360,182 0,246 Z" fill="#1A120A"/>
+      <path d="M0,128 C360,64 720,64 1080,128 C1260,160 1350,164 1440,152 L1440,232 C1350,222 1260,218 1080,178 C720,114 360,114 0,178 Z" fill="url(#agRedMid)"/>
+      <path d="M0,62 C360,0 720,0 1080,62 C1260,94 1350,98 1440,86 L1440,166 C1350,156 1260,152 1080,112 C720,48 360,48 0,112 Z" fill="url(#agGoldMid)"/>
     </svg>
   </div>
   <!-- Dải sóng NỀN CUỐI (lớp sóng đối xứng như chân banner) -->
