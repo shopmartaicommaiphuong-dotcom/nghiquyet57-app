@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Quản trị Tổ chức · Sổ tay NQ57</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef3fb;--panel:#fff;--ink:#132038;--mut:#5b6b86;--line:#e2e9f4;--gold:#d4a017;--gold2:#f6c945;--red:#c62828;--blue:#1552b8;--blue2:#2f7be6;--green:#188a4e;--shadow:0 14px 34px rgba(23,52,110,.14)}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Be Vietnam Pro',system-ui,Arial,sans-serif;color:var(--ink);background:radial-gradient(1100px 520px at 88% -8%,rgba(47,123,230,.14),transparent 60%),radial-gradient(900px 480px at -6% 8%,rgba(212,160,23,.14),transparent 60%),var(--bg);min-height:100vh}
+.wrap{max-width:1180px;margin:0 auto;padding:18px 16px 90px}
+.top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:linear-gradient(120deg,#0f2c63,#1552b8 55%,#2f7be6);color:#fff;border-radius:20px;padding:16px 20px;box-shadow:var(--shadow)}
+.top .logo{width:46px;height:46px;border-radius:13px;background:linear-gradient(145deg,var(--gold2),var(--gold));display:grid;place-items:center;font-weight:800;color:#3a2a00;font-size:20px}
+.top h1{font-size:18px;margin:0;font-weight:800}.top p{margin:2px 0 0;font-size:12.5px;opacity:.9}.top .sp{flex:1}
+.btn{border:0;cursor:pointer;font-family:inherit;font-weight:700;border-radius:12px;padding:10px 15px;font-size:14px;transition:transform .16s cubic-bezier(.34,1.56,.64,1),filter .16s,box-shadow .16s;display:inline-flex;align-items:center;gap:7px}
+.btn:active{transform:translateY(2px)}
+.btn-gold{background:linear-gradient(145deg,var(--gold2),var(--gold));color:#3a2a00;box-shadow:0 8px 18px rgba(212,160,23,.4)}.btn-gold:hover{transform:translateY(-2px)}
+.btn-blue{background:linear-gradient(145deg,var(--blue2),var(--blue));color:#fff}.btn-blue:hover{transform:translateY(-2px)}
+.btn-ghost{background:rgba(255,255,255,.16);color:#fff;border:1px solid rgba(255,255,255,.35)}.btn-ghost:hover{background:rgba(255,255,255,.26)}
+.btn-red{background:#fff;color:var(--red);border:1.5px solid #f3c9c9}.btn-red:hover{background:#fdecec}
+.btn-sm{padding:7px 11px;font-size:12.5px;border-radius:10px}
+.mini{background:#fff;border:1.3px solid var(--line);color:var(--ink)}.mini:hover{border-color:var(--blue2);color:var(--blue)}
+.login{max-width:420px;margin:8vh auto 0;background:var(--panel);border-radius:22px;box-shadow:var(--shadow);padding:30px 26px;border:1px solid var(--line);text-align:center}
+.login .logo{width:64px;height:64px;border-radius:18px;margin:0 auto 14px;background:linear-gradient(145deg,var(--gold2),var(--gold));display:grid;place-items:center;font-weight:800;color:#3a2a00;font-size:28px}
+.fld{text-align:left;margin-bottom:13px}.fld label{display:block;font-size:12.5px;font-weight:600;color:var(--mut);margin-bottom:5px}
+.fld input,.fld textarea{width:100%;padding:11px 13px;border:1.5px solid var(--line);border-radius:11px;font-family:inherit;font-size:14px;background:#f8fafd}
+.fld input:focus,.fld textarea:focus{outline:0;border-color:var(--blue2);background:#fff}
+.msg{font-size:13px;margin-top:10px;min-height:18px}.msg.err{color:var(--red)}
+.tabbar{display:flex;gap:8px;margin:18px 0 4px;flex-wrap:wrap}
+.tabbar button{background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:10px 15px;font-family:inherit;font-weight:700;font-size:14px;color:#2a3a56;cursor:pointer}
+.tabbar button.on{background:linear-gradient(145deg,var(--blue2),var(--blue));color:#fff;border-color:transparent}
+.sec{background:var(--panel);border-radius:20px;box-shadow:var(--shadow);border:1px solid var(--line);padding:18px;margin-top:16px}
+.sec h3{margin:0 0 4px;font-size:16px}.sec .desc{color:var(--mut);font-size:12.5px;margin:0 0 14px}
+.row{display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap;background:#f8fafd;border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px}
+.row.sel{border-color:var(--blue2);box-shadow:0 0 0 3px rgba(47,123,230,.14)}
+.row .grow{flex:1;min-width:200px;display:flex;flex-direction:column;gap:7px}
+.inp{width:100%;padding:9px 11px;border:1.5px solid var(--line);border-radius:10px;font-family:inherit;font-size:13.5px;background:#fff}
+textarea.inp{resize:vertical;min-height:60px;line-height:1.45}
+.acts{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.ordbox{display:flex;flex-direction:column;gap:4px}
+.chk{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--mut);font-weight:600}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.pcard{background:#f8fafd;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.pcard.off{opacity:.6}
+.pcard .ph{aspect-ratio:4/5;background:#dde6f3;position:relative;overflow:hidden}
+.pcard .ph img{width:100%;height:100%;object-fit:cover;display:block}
+.pcard .ph .noimg{position:absolute;inset:0;display:grid;place-items:center;color:#8aa;font-size:12px}
+.pcard .pad{padding:10px;display:flex;flex-direction:column;gap:6px}
+.pill{font-size:11px;font-weight:700;color:#fff;background:var(--blue);border-radius:20px;padding:2px 9px;align-self:flex-start}
+.crumb{color:var(--mut);font-size:12.5px;margin:0 0 10px}.crumb b{color:var(--blue)}
+.hint{color:var(--mut);font-size:12.5px}
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(30px);opacity:0;pointer-events:none;background:#0f2c63;color:#fff;padding:12px 20px;border-radius:13px;font-weight:600;box-shadow:var(--shadow);transition:.3s;z-index:90;max-width:90vw;text-align:center}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}.toast.err{background:var(--red)}.toast.ok{background:var(--green)}
+.busy{position:fixed;inset:0;background:rgba(238,243,251,.72);backdrop-filter:blur(3px);display:none;place-items:center;z-index:80}.busy.show{display:grid}
+.spin{width:52px;height:52px;border-radius:50%;border:5px solid #cdd9ee;border-top-color:var(--blue);animation:sp 1s linear infinite}@keyframes sp{to{transform:rotate(360deg)}}
+.cfgwarn{background:#fff6e6;border:1.5px solid #f0d089;color:#7a5b00;border-radius:14px;padding:14px 16px;font-size:13.5px;margin-top:16px}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="loginView">
+    <div class="login"><div class="logo">57</div><h2>Quản trị Tổ chức</h2><p class="hint">Ban lãnh đạo · Cổng kết nối · Hồ sơ năng lực</p>
+      <div id="cfgBox"></div>
+      <form id="loginForm" style="margin-top:14px">
+        <div class="fld"><label>Email quản trị</label><input type="email" id="email" required></div>
+        <div class="fld"><label>Mật khẩu</label><input type="password" id="pass" required></div>
+        <button class="btn btn-blue" style="width:100%;justify-content:center" type="submit">Đăng nhập</button>
+        <div class="msg" id="loginMsg"></div>
+      </form>
+    </div>
+  </div>
+
+  <div id="appView" hidden>
+    <div class="top">
+      <div class="logo">57</div>
+      <div><h1>Quản trị Tổ chức</h1><p id="whoami">Đồng bộ realtime với trang chủ</p></div>
+      <div class="sp"></div>
+      <a class="btn btn-gold" href="index.html" target="_blank">Xem trang chủ ↗</a>
+      <a class="btn btn-ghost" href="admin.html">Quản lý ảnh Sổ tay</a>
+      <button class="btn btn-ghost" id="logout">Đăng xuất</button>
+    </div>
+
+    <div class="tabbar">
+      <button data-p="lead" class="on">🏛️ Ban lãnh đạo</button>
+      <button data-p="portal">🔗 Cổng kết nối</button>
+      <button data-p="profile">📄 Hồ sơ năng lực</button>
+    </div>
+
+    <!-- ============ BAN LÃNH ĐẠO ============ -->
+    <div id="p-lead">
+      <div class="sec">
+        <h3>① Module TO (khối lớn)</h3><p class="desc">Ví dụ "BAN LÃNH ĐẠO VIỆN". Bấm <b>Chọn</b> để quản lý hội đồng bên trong.</p>
+        <div id="blockList"></div>
+        <button class="btn btn-sm btn-blue" id="addBlock">＋ Thêm Module TO</button>
+      </div>
+      <div class="sec" id="tabSec" hidden>
+        <h3>② Hội đồng (tab) trong Module</h3><p class="crumb" id="crumbBlock"></p>
+        <div id="tabList"></div>
+        <button class="btn btn-sm btn-blue" id="addTab">＋ Thêm hội đồng</button>
+      </div>
+      <div class="sec" id="peopleSec" hidden>
+        <h3>③ Thành viên trong hội đồng</h3><p class="crumb" id="crumbTab"></p>
+        <div class="grid" id="peopleList"></div>
+        <button class="btn btn-sm btn-blue" id="addPerson" style="margin-top:10px">＋ Thêm người</button>
+      </div>
+    </div>
+
+    <!-- ============ CỔNG KẾT NỐI ============ -->
+    <div id="p-portal" hidden>
+      <div class="sec">
+        <h3>Cổng kết nối / điều hướng</h3><p class="desc">Nhóm <b>main</b> = nút chính (Viện AVG, Danbiet.vn). Nhóm <b>member</b> = đơn vị thành viên.</p>
+        <div id="linkList"></div>
+        <button class="btn btn-sm btn-blue" id="addLink">＋ Thêm liên kết</button>
+      </div>
+    </div>
+
+    <!-- ============ HỒ SƠ NĂNG LỰC ============ -->
+    <div id="p-profile" hidden>
+      <div class="sec">
+        <h3>Hồ sơ năng lực / cơ cấu tổ chức</h3><p class="desc">Mỗi mục 1 tiêu đề + đoạn nội dung, hiện thành thẻ trên trang chủ.</p>
+        <div id="profList"></div>
+        <button class="btn btn-sm btn-blue" id="addProf">＋ Thêm mục</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="busy" id="busy"><div class="spin"></div></div>
+<div class="toast" id="toast"></div>
+<input type="file" id="filePick" accept="image/*" hidden>
+
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+var cfgOK=window.SB_URL&&window.SB_ANON&&!SB_URL.includes('YOUR-')&&!SB_ANON.includes('YOUR-');
+var sb=null,pendingUpload=null;
+var cur={block:null,tab:null};
+var $=function(s,r){return (r||document).querySelector(s);};
+function busy(v){$('#busy').classList.toggle('show',v);}
+function toast(t,k){var e=$('#toast');e.textContent=t;e.className='toast show '+(k||'');clearTimeout(e._t);e._t=setTimeout(function(){e.className='toast';},2600);}
+var esc=function(s){return (s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
+function ord(a,b){return (a.display_order-b.display_order)||(a.id-b.id);}
+
+if(!cfgOK){$('#cfgBox').innerHTML='<div class="cfgwarn">Chưa cấu hình Supabase — điền config.js rồi tải lại.</div>';$('#loginForm').hidden=true;}
+else{sb=supabase.createClient(SB_URL,SB_ANON,{auth:{persistSession:true,autoRefreshToken:true}});boot();}
+
+async function boot(){var s=(await sb.auth.getSession()).data.session;if(s)showApp(s);sb.auth.onAuthStateChange(function(_e,ss){if(ss)showApp(ss);else showLogin();});}
+$('#loginForm').addEventListener('submit',async function(e){e.preventDefault();$('#loginMsg').textContent='Đang đăng nhập…';var r=await sb.auth.signInWithPassword({email:$('#email').value.trim(),password:$('#pass').value});if(r.error){$('#loginMsg').className='msg err';$('#loginMsg').textContent='Sai email/mật khẩu.';}});
+$('#logout').addEventListener('click',function(){sb.auth.signOut();});
+function showLogin(){$('#loginView').hidden=false;$('#appView').hidden=true;}
+function showApp(s){$('#loginView').hidden=true;$('#appView').hidden=false;$('#whoami').textContent='Đã đăng nhập: '+(s.user&&s.user.email||'admin')+' · realtime';loadAll();subscribe();}
+
+/* tab panels */
+document.querySelectorAll('.tabbar button').forEach(function(b){b.onclick=function(){
+  document.querySelectorAll('.tabbar button').forEach(function(x){x.classList.remove('on');});b.classList.add('on');
+  ['lead','portal','profile'].forEach(function(p){$('#p-'+p).hidden=(p!==b.getAttribute('data-p'));});
+};});
+
+/* ---------- DATA ---------- */
+var D={blocks:[],tabs:[],people:[],links:[],profile:[]};
+var chan=null;
+function subscribe(){if(chan)return;chan=sb.channel('org-admin');
+  ['org_blocks','org_tabs','org_people','org_links','org_profile'].forEach(function(t){chan.on('postgres_changes',{event:'*',schema:'public',table:t},loadAll);});chan.subscribe();}
+async function loadAll(){
+  var r=await Promise.all([sb.from('org_blocks').select('*'),sb.from('org_tabs').select('*'),sb.from('org_people').select('*'),sb.from('org_links').select('*'),sb.from('org_profile').select('*')]);
+  D.blocks=(r[0].data||[]).sort(ord);D.tabs=(r[1].data||[]).sort(ord);D.people=(r[2].data||[]).sort(ord);D.links=(r[3].data||[]).sort(ord);D.profile=(r[4].data||[]).sort(ord);
+  renderBlocks();renderTabs();renderPeople();renderLinks();renderProfile();
+}
+function nextOrd(arr){return arr.length?Math.max.apply(null,arr.map(function(x){return x.display_order||0;}))+1:1;}
+async function ins(tbl,data){busy(true);var r=await sb.from(tbl).insert(data);busy(false);r.error?toast('Lỗi: '+r.error.message,'err'):toast('Đã thêm ✓','ok');}
+async function upd(tbl,id,data){busy(true);var r=await sb.from(tbl).update(data).eq('id',id);busy(false);r.error?toast('Lỗi: '+r.error.message,'err'):toast('Đã lưu ✓','ok');}
+async function del(tbl,id){busy(true);var r=await sb.from(tbl).delete().eq('id',id);busy(false);r.error?toast('Lỗi: '+r.error.message,'err'):toast('Đã xóa','ok');}
+async function move(tbl,list,id,dir){var i=list.findIndex(function(x){return x.id===id;});var j=i+dir;if(j<0||j>=list.length)return;busy(true);await sb.from(tbl).update({display_order:list[j].display_order}).eq('id',list[i].id);await sb.from(tbl).update({display_order:list[i].display_order}).eq('id',list[j].id);busy(false);}
+
+/* ---------- BLOCKS ---------- */
+function renderBlocks(){var el=$('#blockList');el.innerHTML='';
+  D.blocks.forEach(function(b){var d=document.createElement('div');d.className='row'+(cur.block===b.id?' sel':'');
+    d.innerHTML='<div class="grow"><input class="inp" data-f="title" value="'+esc(b.title)+'" placeholder="Tên Module TO"><input class="inp" data-f="subtitle" value="'+esc(b.subtitle)+'" placeholder="Mô tả ngắn"></div>'+
+      '<div class="acts"><button class="btn btn-sm btn-gold" data-a="save">Lưu</button><button class="btn btn-sm '+(cur.block===b.id?'btn-blue':'mini')+'" data-a="pick">'+(cur.block===b.id?'Đang chọn':'Chọn')+'</button><button class="btn btn-sm '+(b.active?'mini':'btn-gold')+'" data-a="tg">'+(b.active?'Ẩn':'Hiện')+'</button><button class="btn btn-sm btn-red" data-a="del">Xóa</button></div>';
+    d.querySelector('[data-a=save]').onclick=function(){upd('org_blocks',b.id,{title:$('[data-f=title]',d).value,subtitle:$('[data-f=subtitle]',d).value});};
+    d.querySelector('[data-a=pick]').onclick=function(){cur.block=b.id;cur.tab=null;renderBlocks();renderTabs();renderPeople();};
+    d.querySelector('[data-a=tg]').onclick=function(){upd('org_blocks',b.id,{active:!b.active});};
+    d.querySelector('[data-a=del]').onclick=function(){if(confirm('Xóa Module này và toàn bộ hội đồng/người bên trong?')){if(cur.block===b.id){cur.block=null;cur.tab=null;}del('org_blocks',b.id);}};
+    el.appendChild(d);});
+  if(!D.blocks.length)el.innerHTML='<p class="hint">Chưa có Module. Bấm "Thêm Module TO".</p>';
+}
+$('#addBlock').onclick=function(){ins('org_blocks',{title:'Module mới',subtitle:'',display_order:nextOrd(D.blocks),active:true});};
+
+/* ---------- TABS ---------- */
+function renderTabs(){var sec=$('#tabSec');if(!cur.block){sec.hidden=true;return;}sec.hidden=false;
+  var b=D.blocks.find(function(x){return x.id===cur.block;});$('#crumbBlock').innerHTML='Module: <b>'+esc(b?b.title:'')+'</b>';
+  var list=D.tabs.filter(function(t){return t.block_id===cur.block;});var el=$('#tabList');el.innerHTML='';
+  list.forEach(function(t){var d=document.createElement('div');d.className='row'+(cur.tab===t.id?' sel':'');
+    d.innerHTML='<div class="ordbox"><button class="btn btn-sm mini" data-a="up">▲</button><button class="btn btn-sm mini" data-a="down">▼</button></div>'+
+      '<div class="grow"><input class="inp" data-f="name" value="'+esc(t.name)+'" placeholder="Tên hội đồng"><textarea class="inp" data-f="intro" placeholder="Giới thiệu ngắn về hội đồng">'+esc(t.intro)+'</textarea></div>'+
+      '<div class="acts"><button class="btn btn-sm btn-gold" data-a="save">Lưu</button><button class="btn btn-sm '+(cur.tab===t.id?'btn-blue':'mini')+'" data-a="pick">'+(cur.tab===t.id?'Đang chọn':'Chọn')+'</button><button class="btn btn-sm '+(t.active?'mini':'btn-gold')+'" data-a="tg">'+(t.active?'Ẩn':'Hiện')+'</button><button class="btn btn-sm btn-red" data-a="del">Xóa</button></div>';
+    d.querySelector('[data-a=save]').onclick=function(){upd('org_tabs',t.id,{name:$('[data-f=name]',d).value,intro:$('[data-f=intro]',d).value});};
+    d.querySelector('[data-a=pick]').onclick=function(){cur.tab=t.id;renderTabs();renderPeople();};
+    d.querySelector('[data-a=tg]').onclick=function(){upd('org_tabs',t.id,{active:!t.active});};
+    d.querySelector('[data-a=del]').onclick=function(){if(confirm('Xóa hội đồng này và toàn bộ thành viên?')){if(cur.tab===t.id)cur.tab=null;del('org_tabs',t.id);}};
+    d.querySelector('[data-a=up]').onclick=function(){move('org_tabs',list,t.id,-1);};
+    d.querySelector('[data-a=down]').onclick=function(){move('org_tabs',list,t.id,1);};
+    el.appendChild(d);});
+  if(!list.length)el.innerHTML='<p class="hint">Chưa có hội đồng.</p>';
+}
+$('#addTab').onclick=function(){if(!cur.block)return;ins('org_tabs',{block_id:cur.block,name:'Hội đồng mới',intro:'',display_order:nextOrd(D.tabs.filter(function(t){return t.block_id===cur.block;})),active:true});};
+
+/* ---------- PEOPLE ---------- */
+function renderPeople(){var sec=$('#peopleSec');if(!cur.tab){sec.hidden=true;return;}sec.hidden=false;
+  var t=D.tabs.find(function(x){return x.id===cur.tab;});$('#crumbTab').innerHTML='Hội đồng: <b>'+esc(t?t.name:'')+'</b>';
+  var list=D.people.filter(function(p){return p.tab_id===cur.tab;});var el=$('#peopleList');el.innerHTML='';
+  list.forEach(function(p){var c=document.createElement('div');c.className='pcard'+(p.active?'':' off');
+    c.innerHTML='<div class="ph">'+(p.photo_url?'<img src="'+esc(p.photo_url)+'">':'<div class="noimg">chưa có ảnh</div>')+'</div>'+
+      '<div class="pad">'+
+      '<input class="inp" data-f="name" value="'+esc(p.name)+'" placeholder="Tên (vd: ThS. Phạm Quốc Đông)">'+
+      '<input class="inp" data-f="title" value="'+esc(p.title)+'" placeholder="Chức danh">'+
+      '<textarea class="inp" data-f="bio" placeholder="Giới thiệu cụ thể">'+esc(p.bio)+'</textarea>'+
+      '<input class="inp" data-f="link" value="'+esc(p.link)+'" placeholder="Link đích (để trống nếu không có)">'+
+      '<div class="acts"><button class="btn btn-sm btn-blue" data-a="ph">Thay ảnh</button><button class="btn btn-sm btn-gold" data-a="save">Lưu</button></div>'+
+      '<div class="acts"><button class="btn btn-sm mini" data-a="up">▲</button><button class="btn btn-sm mini" data-a="down">▼</button><button class="btn btn-sm '+(p.active?'mini':'btn-gold')+'" data-a="tg">'+(p.active?'Ẩn':'Hiện')+'</button><button class="btn btn-sm btn-red" data-a="del">Xóa</button></div>'+
+      '</div>';
+    c.querySelector('[data-a=save]').onclick=function(){upd('org_people',p.id,{name:$('[data-f=name]',c).value,title:$('[data-f=title]',c).value,bio:$('[data-f=bio]',c).value,link:$('[data-f=link]',c).value});};
+    c.querySelector('[data-a=ph]').onclick=function(){pendingUpload={id:p.id,path:p.storage_path};$('#filePick').click();};
+    c.querySelector('[data-a=tg]').onclick=function(){upd('org_people',p.id,{active:!p.active});};
+    c.querySelector('[data-a=del]').onclick=function(){if(confirm('Xóa người này?')){if(p.storage_path)sb.storage.from('sotay').remove([p.storage_path]);del('org_people',p.id);}};
+    c.querySelector('[data-a=up]').onclick=function(){move('org_people',list,p.id,-1);};
+    c.querySelector('[data-a=down]').onclick=function(){move('org_people',list,p.id,1);};
+    el.appendChild(c);});
+  if(!list.length)el.innerHTML='<p class="hint">Chưa có thành viên.</p>';
+}
+$('#addPerson').onclick=function(){if(!cur.tab)return;ins('org_people',{tab_id:cur.tab,name:'Họ tên',title:'',bio:'',link:'',display_order:nextOrd(D.people.filter(function(p){return p.tab_id===cur.tab;})),active:true});};
+
+/* ---------- LINKS ---------- */
+function renderLinks(){var el=$('#linkList');el.innerHTML='';
+  D.links.forEach(function(l){var d=document.createElement('div');d.className='row';
+    d.innerHTML='<div class="ordbox"><button class="btn btn-sm mini" data-a="up">▲</button><button class="btn btn-sm mini" data-a="down">▼</button></div>'+
+      '<div class="grow"><div class="acts"><input class="inp" style="width:60px;flex:none" data-f="emoji" value="'+esc(l.emoji)+'" placeholder="🔗"><input class="inp" data-f="label" value="'+esc(l.label)+'" placeholder="Tên hiển thị"></div>'+
+      '<input class="inp" data-f="url" value="'+esc(l.url)+'" placeholder="https://...">'+
+      '<input class="inp" data-f="note" value="'+esc(l.note)+'" placeholder="Ghi chú ngắn">'+
+      '<label class="chk">Nhóm: <select class="inp" style="width:auto" data-f="grp"><option value="main"'+(l.grp==='main'?' selected':'')+'>main (nút chính)</option><option value="member"'+(l.grp==='member'?' selected':'')+'>member (thành viên)</option></select></label></div>'+
+      '<div class="acts"><button class="btn btn-sm btn-gold" data-a="save">Lưu</button><button class="btn btn-sm '+(l.active?'mini':'btn-gold')+'" data-a="tg">'+(l.active?'Ẩn':'Hiện')+'</button><button class="btn btn-sm btn-red" data-a="del">Xóa</button></div>';
+    d.querySelector('[data-a=save]').onclick=function(){upd('org_links',l.id,{emoji:$('[data-f=emoji]',d).value,label:$('[data-f=label]',d).value,url:$('[data-f=url]',d).value,note:$('[data-f=note]',d).value,grp:$('[data-f=grp]',d).value});};
+    d.querySelector('[data-a=tg]').onclick=function(){upd('org_links',l.id,{active:!l.active});};
+    d.querySelector('[data-a=del]').onclick=function(){if(confirm('Xóa liên kết này?'))del('org_links',l.id);};
+    d.querySelector('[data-a=up]').onclick=function(){move('org_links',D.links,l.id,-1);};
+    d.querySelector('[data-a=down]').onclick=function(){move('org_links',D.links,l.id,1);};
+    el.appendChild(d);});
+  if(!D.links.length)el.innerHTML='<p class="hint">Chưa có liên kết.</p>';
+}
+$('#addLink').onclick=function(){ins('org_links',{grp:'main',label:'Liên kết mới',url:'https://',note:'',emoji:'🔗',display_order:nextOrd(D.links),active:true});};
+
+/* ---------- PROFILE ---------- */
+function renderProfile(){var el=$('#profList');el.innerHTML='';
+  D.profile.forEach(function(r){var d=document.createElement('div');d.className='row';
+    d.innerHTML='<div class="ordbox"><button class="btn btn-sm mini" data-a="up">▲</button><button class="btn btn-sm mini" data-a="down">▼</button></div>'+
+      '<div class="grow"><input class="inp" data-f="title" value="'+esc(r.title)+'" placeholder="Tiêu đề mục"><textarea class="inp" data-f="body" placeholder="Nội dung">'+esc(r.body)+'</textarea></div>'+
+      '<div class="acts"><button class="btn btn-sm btn-gold" data-a="save">Lưu</button><button class="btn btn-sm '+(r.active?'mini':'btn-gold')+'" data-a="tg">'+(r.active?'Ẩn':'Hiện')+'</button><button class="btn btn-sm btn-red" data-a="del">Xóa</button></div>';
+    d.querySelector('[data-a=save]').onclick=function(){upd('org_profile',r.id,{title:$('[data-f=title]',d).value,body:$('[data-f=body]',d).value});};
+    d.querySelector('[data-a=tg]').onclick=function(){upd('org_profile',r.id,{active:!r.active});};
+    d.querySelector('[data-a=del]').onclick=function(){if(confirm('Xóa mục này?'))del('org_profile',r.id);};
+    d.querySelector('[data-a=up]').onclick=function(){move('org_profile',D.profile,r.id,-1);};
+    d.querySelector('[data-a=down]').onclick=function(){move('org_profile',D.profile,r.id,1);};
+    el.appendChild(d);});
+  if(!D.profile.length)el.innerHTML='<p class="hint">Chưa có mục hồ sơ.</p>';
+}
+$('#addProf').onclick=function(){ins('org_profile',{title:'Mục mới',body:'',display_order:nextOrd(D.profile),active:true});};
+
+/* ---------- UPLOAD ẢNH NGƯỜI ---------- */
+$('#filePick').addEventListener('change',async function(e){var f=e.target.files[0];e.target.value='';if(!f||!pendingUpload)return;
+  var pu=pendingUpload;pendingUpload=null;busy(true);
+  try{
+    var ext=(f.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg';
+    var path='people/'+Date.now()+'_'+Math.random().toString(36).slice(2,7)+'.'+ext;
+    var up=await sb.storage.from('sotay').upload(path,f,{upsert:true,contentType:f.type||'image/jpeg'});
+    if(up.error)throw up.error;
+    var url=sb.storage.from('sotay').getPublicUrl(path).data.publicUrl;
+    if(pu.path)await sb.storage.from('sotay').remove([pu.path]);
+    var r=await sb.from('org_people').update({photo_url:url,storage_path:path}).eq('id',pu.id);
+    if(r.error)throw r.error;toast('Đã cập nhật ảnh ✓','ok');
+  }catch(err){toast('Lỗi ảnh: '+(err.message||err),'err');}
+  busy(false);
+});
+</script>
+</body>
+</html>

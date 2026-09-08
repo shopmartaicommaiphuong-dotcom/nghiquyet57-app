@@ -154,12 +154,8 @@ tbody tr.sum td{background:linear-gradient(160deg,var(--gold),var(--gold-d));col
 .kpi-scroll::-webkit-scrollbar-thumb{background:#C9B98F;border-radius:8px;border:3px solid var(--card)}
 .kpi-scroll::-webkit-scrollbar-track{background:#EEE6D3;border-radius:8px}
 /* ===== THƯ VIỆN ẢNH TÌM HIỂU NQ57 (masonry + 3D + kim tuyến + nhún) ===== */
-.gallery{
-  columns:1;column-gap:20px;
-  max-width:var(--maxw);margin:0 auto;
-  padding:0 22px;box-sizing:border-box;
-}
-@media(max-width:640px){.gallery{padding:0 14px}}
+.gallery{columns:2 340px;column-gap:20px}
+@media(max-width:640px){.gallery{columns:1}}
 .gcard{position:relative;break-inside:avoid;-webkit-column-break-inside:avoid;margin:0 0 20px;border-radius:16px;overflow:hidden;
   background:var(--card);border:1px solid var(--line2);box-shadow:0 22px 44px -26px rgba(24,35,56,.5);
   transform-style:preserve-3d;transition:transform .42s cubic-bezier(.2,.8,.3,1.15),box-shadow .42s ease,border-color .42s ease}
@@ -824,6 +820,163 @@ body>section,body>header,body>footer{position:relative;z-index:1}
       el.addEventListener('pointerleave',function(){el.style.transform='';el.style.boxShadow='';});
     })(els[i]);}
   }
+})();
+</script>
+
+
+<style>
+/* ============ CỤM TỔ CHỨC ĐỘNG ============ */
+.org-sec{padding:8px 0}
+.org-profile{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.org-pcard{background:#fff;border:1px solid #e6edf7;border-radius:16px;padding:18px 18px;box-shadow:0 12px 30px rgba(20,40,90,.08);
+  transition:transform .3s cubic-bezier(.34,1.56,.64,1),box-shadow .3s;position:relative;overflow:hidden}
+.org-pcard:hover{transform:translateY(-6px) scale(1.015);box-shadow:0 26px 54px -18px rgba(21,82,184,.4)}
+.org-pcard h3{margin:0 0 8px;font-size:1.02rem;color:#132038;font-weight:800;border-left:4px solid #d4a017;padding-left:10px}
+.org-pcard p{margin:0;color:#41506b;font-size:.92rem;line-height:1.6}
+.org-mod{margin-top:22px;background:linear-gradient(180deg,#ffffff,#f6f9fe);border:1px solid #e2e9f4;border-radius:22px;
+  padding:20px 20px 24px;box-shadow:0 20px 46px rgba(20,40,90,.1)}
+.org-mod-h{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.org-mod-h .ic{width:44px;height:44px;border-radius:12px;background:linear-gradient(145deg,#2f7be6,#0f2c63);display:grid;place-items:center;color:#fff;font-size:22px;flex:none;box-shadow:0 8px 18px rgba(21,82,184,.35)}
+.org-mod-h h2{margin:0;font-size:1.3rem;color:#0f2c63;font-weight:800}
+.org-mod-h p{margin:2px 0 0;color:#5b6b86;font-size:.9rem;font-weight:600}
+.org-grid{display:grid;grid-template-columns:250px 1fr;gap:18px;margin-top:16px}
+@media(max-width:720px){.org-grid{grid-template-columns:1fr}}
+.org-tabs{display:flex;flex-direction:column;gap:8px}
+@media(max-width:720px){.org-tabs{flex-direction:row;overflow-x:auto;padding-bottom:6px}}
+.org-tab{text-align:left;background:#fff;border:1.5px solid #e2e9f4;border-radius:12px;padding:12px 14px;font-family:inherit;font-size:.92rem;
+  font-weight:700;color:#2a3a56;cursor:pointer;transition:.2s;white-space:nowrap;flex:none}
+.org-tab:hover{border-color:#2f7be6;color:#1552b8;transform:translateX(3px)}
+.org-tab.active{background:linear-gradient(145deg,#2f7be6,#1552b8);color:#fff;border-color:transparent;box-shadow:0 8px 18px rgba(21,82,184,.35)}
+.org-detail{min-width:0}
+.org-detail .intro{color:#5b6b86;font-size:.92rem;font-weight:600;margin:0 0 14px}
+.org-people{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px}
+.org-person{background:#fff;border:1px solid #e6edf7;border-radius:16px;overflow:hidden;box-shadow:0 12px 28px rgba(20,40,90,.1);
+  transition:transform .32s cubic-bezier(.34,1.56,.64,1),box-shadow .32s;display:flex;flex-direction:column}
+.org-person[data-href]{cursor:pointer}
+.org-person:hover{transform:translateY(-7px) scale(1.02);box-shadow:0 28px 56px -18px rgba(21,82,184,.42)}
+.op-photo{width:100%;aspect-ratio:4/5;background:#dde6f3;overflow:hidden}
+.op-photo img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s cubic-bezier(.2,.7,.2,1)}
+.org-person:hover .op-photo img{transform:scale(1.06)}
+.op-ph{display:grid;place-items:center;background:radial-gradient(circle at 50% 35%,#2f7be6,#0f2c63)}
+.op-ph span{color:#fff;font-size:2.4rem;font-weight:800;letter-spacing:1px}
+.op-body{padding:13px 14px 16px;text-align:center;display:flex;flex-direction:column;gap:6px}
+.op-name{font-size:1.02rem;font-weight:800;color:#132038}
+.op-title{font-size:.86rem;font-weight:700;color:#c0791a;line-height:1.35}
+.op-bio{font-size:.84rem;color:#51617e;line-height:1.55}
+.op-link{margin-top:4px;display:inline-block;color:#1552b8;font-weight:800;font-size:.85rem;text-decoration:none}
+.op-link:hover{text-decoration:underline}
+.org-portal{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-top:6px}
+.org-plink{display:flex;align-items:center;gap:13px;background:linear-gradient(135deg,#0f2c63,#1552b8);color:#fff;text-decoration:none;
+  border-radius:15px;padding:15px 16px;box-shadow:0 14px 30px rgba(21,82,184,.3);position:relative;overflow:hidden;
+  transition:transform .3s cubic-bezier(.34,1.56,.64,1),box-shadow .3s,filter .3s}
+.org-plink::after{content:"";position:absolute;top:0;left:-70%;width:50%;height:100%;background:linear-gradient(115deg,transparent,rgba(255,255,255,.35),transparent);transform:skewX(-20deg);transition:left .7s}
+.org-plink:hover{transform:translateY(-5px) scale(1.02);filter:brightness(1.08);box-shadow:0 24px 46px rgba(21,82,184,.45)}
+.org-plink:hover::after{left:130%}
+.org-plink .em{font-size:1.7rem;flex:none}
+.org-plink b{display:block;font-size:1rem}
+.org-plink small{opacity:.85;font-size:.8rem}
+.org-plink.mem{background:linear-gradient(135deg,#188a4e,#0e5d34)}
+.org-sub{color:#5b6b86;font-weight:700;font-size:.9rem;margin:16px 0 6px}
+.org-empty{color:#8aa;font-size:.9rem;padding:10px 0}
+</style>
+
+<section class="org-sec"><div class="wrap">
+  <div class="sec-h reveal"><span class="eyebrow">Hồ sơ năng lực</span><h2>Cơ cấu tổ chức &amp; Năng lực</h2><p>Viện AVG · Trung tâm Truyền thông Công nghệ số VGEA · Đơn vị thành viên</p></div>
+  <div class="org-profile" id="org-profile"></div>
+  <div id="org-blocks"></div>
+</div></section>
+
+<section class="org-sec"><div class="wrap">
+  <div class="sec-h reveal"><span class="eyebrow">Cổng kết nối</span><h2>Truy cập nhanh hệ sinh thái</h2><p>Điều hướng thẳng tới Viện AVG, Danbiet.vn và các đơn vị thành viên</p></div>
+  <div class="org-portal" id="org-portal"></div>
+  <div class="org-sub" id="org-member-title" hidden>Đơn vị thành viên &amp; đối tác</div>
+  <div class="org-portal" id="org-portal-member"></div>
+</div></section>
+
+<script>
+(function(){
+  if(!window.SB_URL||!window.SB_ANON||String(SB_URL).indexOf('YOUR-')>=0){return;}
+  var sb=supabase.createClient(SB_URL,SB_ANON);
+  var $=function(s){return document.querySelector(s);};
+  function esc(s){return (s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function nl(s){return esc(s).replace(/\n/g,'<br>');}
+  function inits(n){n=(n||'').trim().split(/\s+/);var a=n.length?n[n.length-2]||n[0]:'';var b=n.length?n[n.length-1]:'';return((a[0]||'')+(b[0]||'')).toUpperCase()||'★';}
+  var state={active:{}};
+
+  function personCard(p){
+    var photo=p.photo_url?('<div class="op-photo"><img loading="lazy" src="'+esc(p.photo_url)+'" alt=""></div>')
+             :('<div class="op-photo op-ph"><span>'+inits(p.name)+'</span></div>');
+    var title=p.title?('<div class="op-title">'+nl(p.title)+'</div>'):'';
+    var bio=p.bio?('<div class="op-bio">'+nl(p.bio)+'</div>'):'';
+    var link=p.link?('<a class="op-link" href="'+esc(p.link)+'" target="_blank" rel="noopener">Xem thêm →</a>'):'';
+    var dh=p.link?(' data-href="'+esc(p.link)+'"'):'';
+    return '<div class="org-person"'+dh+'>'+photo+'<div class="op-body"><div class="op-name">'+esc(p.name)+'</div>'+title+bio+link+'</div></div>';
+  }
+  function renderBlock(el,block,tabs,peopleByTab){
+    var tabsHtml=tabs.map(function(t){return '<button class="org-tab" data-t="'+t.id+'">'+esc(t.name)+'</button>';}).join('');
+    el.innerHTML='<div class="org-mod-h"><div class="ic">🏛️</div><div><h2>'+esc(block.title)+'</h2>'+(block.subtitle?'<p>'+esc(block.subtitle)+'</p>':'')+'</div></div>'+
+      '<div class="org-grid"><div class="org-tabs">'+tabsHtml+'</div><div class="org-detail" id="det-'+block.id+'"></div></div>';
+    function show(tid){
+      state.active[block.id]=tid;
+      var btns=el.querySelectorAll('.org-tab');for(var i=0;i<btns.length;i++)btns[i].classList.toggle('active',btns[i].getAttribute('data-t')==String(tid));
+      var t=tabs.filter(function(x){return x.id==tid;})[0];
+      var ppl=(peopleByTab[tid]||[]);
+      var det=el.querySelector('#det-'+block.id);
+      det.innerHTML=(t&&t.intro?'<p class="intro">'+esc(t.intro)+'</p>':'')+
+        (ppl.length?('<div class="org-people">'+ppl.map(personCard).join('')+'</div>'):'<div class="org-empty">Chưa có thành viên.</div>');
+    }
+    el.querySelectorAll('.org-tab').forEach(function(b){b.onclick=function(){show(+b.getAttribute('data-t'));};});
+    var def=(state.active[block.id]&&tabs.some(function(x){return x.id==state.active[block.id];}))?state.active[block.id]:(tabs[0]&&tabs[0].id);
+    if(def)show(def); else el.querySelector('#det-'+block.id).innerHTML='<div class="org-empty">Chưa có hội đồng.</div>';
+  }
+
+  function render(data){
+    // profile
+    var pf=$('#org-profile');
+    pf.innerHTML=data.profile.map(function(r){return '<div class="org-pcard reveal in"><h3>'+esc(r.title)+'</h3><p>'+nl(r.body)+'</p></div>';}).join('')||'';
+    // blocks
+    var wrap=$('#org-blocks'); wrap.innerHTML='';
+    data.blocks.forEach(function(b){
+      var tabs=data.tabs.filter(function(t){return t.block_id==b.id;});
+      var peopleByTab={};data.people.forEach(function(p){(peopleByTab[p.tab_id]=peopleByTab[p.tab_id]||[]).push(p);});
+      var sec=document.createElement('div');sec.className='org-mod reveal in';
+      wrap.appendChild(sec);renderBlock(sec,b,tabs,peopleByTab);
+    });
+    // portal
+    var main=data.links.filter(function(l){return l.grp!=='member';});
+    var mem=data.links.filter(function(l){return l.grp==='member';});
+    function plink(l,cls){return '<a class="org-plink '+cls+'" href="'+esc(l.url)+'" target="_blank" rel="noopener"><span class="em">'+(esc(l.emoji)||'🔗')+'</span><span><b>'+esc(l.label)+'</b>'+(l.note?'<small>'+esc(l.note)+'</small>':'')+'</span></a>';}
+    $('#org-portal').innerHTML=main.map(function(l){return plink(l,'');}).join('');
+    $('#org-portal-member').innerHTML=mem.map(function(l){return plink(l,'mem');}).join('');
+    $('#org-member-title').hidden=!mem.length;
+  }
+
+  function ord(a,b){return (a.display_order-b.display_order)||(a.id-b.id);}
+  function load(){
+    Promise.all([
+      sb.from('org_profile').select('*').eq('active',true),
+      sb.from('org_blocks').select('*').eq('active',true),
+      sb.from('org_tabs').select('*').eq('active',true),
+      sb.from('org_people').select('*').eq('active',true),
+      sb.from('org_links').select('*').eq('active',true)
+    ]).then(function(r){
+      if(r.some(function(x){return x.error;}))return;
+      render({
+        profile:(r[0].data||[]).sort(ord), blocks:(r[1].data||[]).sort(ord),
+        tabs:(r[2].data||[]).sort(ord), people:(r[3].data||[]).sort(ord), links:(r[4].data||[]).sort(ord)
+      });
+    });
+  }
+  document.addEventListener('click',function(e){var c=e.target.closest?e.target.closest('.org-person[data-href]'):null;
+    if(c&&!(e.target.closest&&e.target.closest('a'))){window.open(c.getAttribute('data-href'),'_blank','noopener');}});
+  load();
+  sb.channel('org-live')
+    .on('postgres_changes',{event:'*',schema:'public',table:'org_profile'},load)
+    .on('postgres_changes',{event:'*',schema:'public',table:'org_blocks'},load)
+    .on('postgres_changes',{event:'*',schema:'public',table:'org_tabs'},load)
+    .on('postgres_changes',{event:'*',schema:'public',table:'org_people'},load)
+    .on('postgres_changes',{event:'*',schema:'public',table:'org_links'},load)
+    .subscribe();
 })();
 </script>
 
