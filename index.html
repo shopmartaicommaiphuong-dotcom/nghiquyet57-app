@@ -343,6 +343,15 @@ section+section::after{content:"";position:absolute;top:-2px;left:50%;transform:
 .pv-mapstage{background:linear-gradient(160deg,#FFFDF6 0%,#FBF1D8 65%,#F5E7C2 100%)!important;
   border:1px solid var(--gold-l)!important}
 .pv-maptitle{color:var(--red-d)!important}
+/* ===== DẢI SÓNG TRANG TRÍ VÀNG-ĐỎ-ĐEN (nền giữa + nền cuối, đối xứng) ===== */
+body{position:relative}
+#avg-decor{position:absolute;left:0;top:0;width:100%;height:100%;z-index:0;pointer-events:none;overflow:hidden}
+#avg-decor .band{position:absolute;left:0;width:100%;line-height:0}
+#avg-decor .band svg{width:100%;height:auto;display:block}
+#avg-decor .mid{top:44%;opacity:.16}
+#avg-decor .mid.mid2{top:70%;opacity:.13;transform:scaleX(-1)}
+#avg-decor .bot{bottom:0;opacity:.55}
+@media(max-width:760px){#avg-decor .mid{opacity:.12}#avg-decor .bot{opacity:.45}}
 /* Ảnh thư viện "Tìm hiểu NQ57" TO HẾT CỠ — full bề ngang, 1 cột */
 #sb-gallery{columns:1 !important;column-gap:0 !important;display:block !important}
 #sb-gallery .gcard{width:100% !important;margin:0 0 26px !important;break-inside:avoid}
@@ -900,6 +909,49 @@ body>section,body>header,body>footer{position:relative;z-index:1}
     {event:'*',schema:'public',table:'sotay_images'}, apply).subscribe();
 })();
 </script>
+
+
+<div id="avg-decor" aria-hidden="true">
+  <!-- Dải sóng NỀN GIỮA (mảnh, mờ, uốn lượn) -->
+  <div class="band mid">
+    <svg viewBox="0 0 1440 200" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="agGold" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#8F6710"/><stop offset=".45" stop-color="#EAC85A"/>
+          <stop offset=".6" stop-color="#C6971E"/><stop offset="1" stop-color="#8F6710"/>
+        </linearGradient>
+      </defs>
+      <path d="M0,120 C240,60 480,60 720,110 C960,160 1200,160 1440,100" fill="none" stroke="url(#agGold)" stroke-width="10"/>
+      <path d="M0,150 C260,100 520,110 720,140 C980,180 1220,120 1440,140" fill="none" stroke="#9E1B22" stroke-width="7"/>
+      <path d="M0,90 C300,150 560,150 760,110 C1000,60 1240,70 1440,60" fill="none" stroke="#1A120A" stroke-width="4" opacity=".7"/>
+    </svg>
+  </div>
+  <div class="band mid mid2">
+    <svg viewBox="0 0 1440 200" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M0,120 C240,60 480,60 720,110 C960,160 1200,160 1440,100" fill="none" stroke="url(#agGold)" stroke-width="9"/>
+      <path d="M0,150 C260,100 520,110 720,140 C980,180 1220,120 1440,140" fill="none" stroke="#9E1B22" stroke-width="6"/>
+    </svg>
+  </div>
+  <!-- Dải sóng NỀN CUỐI (lớp sóng đối xứng như chân banner) -->
+  <div class="band bot">
+    <svg viewBox="0 0 1440 320" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="agGold2" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#8F6710"/><stop offset=".5" stop-color="#EAC85A"/><stop offset="1" stop-color="#8F6710"/>
+        </linearGradient>
+      </defs>
+      <!-- lớp đen sau -->
+      <path d="M0,320 L0,150 C240,90 480,120 720,180 C960,240 1200,150 1440,120 L1440,320 Z" fill="#1A120A" opacity=".85"/>
+      <!-- lớp đỏ đô -->
+      <path d="M0,320 L0,205 C260,150 520,178 720,218 C980,258 1220,200 1440,178 L1440,320 Z" fill="#9E1B22" opacity=".92"/>
+      <!-- lớp vàng gold trước -->
+      <path d="M0,320 L0,255 C300,218 560,238 760,265 C1000,292 1240,252 1440,238 L1440,320 Z" fill="url(#agGold2)"/>
+      <!-- swoosh vàng đối xứng hai góc -->
+      <path d="M-20,300 C160,250 300,255 430,300" fill="none" stroke="#EAC85A" stroke-width="6" opacity=".8"/>
+      <path d="M1460,300 C1280,250 1140,255 1010,300" fill="none" stroke="#EAC85A" stroke-width="6" opacity=".8"/>
+    </svg>
+  </div>
+</div>
 
 
 <script>
