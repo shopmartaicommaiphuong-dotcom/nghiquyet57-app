@@ -196,7 +196,7 @@ var SLOTS={hero:{name:"Ảnh Hero (đầu trang)",ic:"i-hero",emoji:"🏙️",de
   vientruong:{name:"Ảnh Viện trưởng",ic:"i-vt",emoji:"👤",desc:"Ngay dưới Poster Đề án.",single:true},
   gallery:{name:"Thư viện “Tìm hiểu NQ57”",ic:"i-gal",emoji:"🖼️",desc:"Thêm/bớt/sắp xếp thoải mái. Kéo-thả nhiều ảnh cùng lúc.",single:false}};
 var cfgOK=window.SB_URL&&window.SB_ANON&&!SB_URL.includes('YOUR-')&&!SB_ANON.includes('YOUR-');
-var sb=null,rows=[],D={blocks:[],tabs:[],people:[],links:[],profile:[],slides:[]},cur={block:null,tab:null};
+var sb=null,rows=[],D={blocks:[],tabs:[],people:[],links:[],profile:[],slides:[],orgvids:[]},cur={block:null,tab:null};
 var $=function(s,r){return (r||document).querySelector(s);};
 function busy(v){$('#busy').classList.toggle('show',v);}
 function toast(t,k){var e=$('#toast');e.textContent=t;e.className='toast show '+(k||'');clearTimeout(e._t);e._t=setTimeout(function(){e.className='toast';},2600);}
@@ -250,7 +250,7 @@ var chan=null;
 function subscribe(){if(chan)return;chan=sb.channel('admin-all');
   chan.on('postgres_changes',{event:'*',schema:'public',table:'sotay_images'},loadImages);
   chan.on('postgres_changes',{event:'*',schema:'public',table:'sotay_videos'},loadVideos);
-  ['org_blocks','org_tabs','org_people','org_links','org_profile','org_slides'].forEach(function(t){chan.on('postgres_changes',{event:'*',schema:'public',table:t},loadOrg);});
+  ['org_blocks','org_tabs','org_people','org_links','org_profile','org_slides','org_videos'].forEach(function(t){chan.on('postgres_changes',{event:'*',schema:'public',table:t},loadOrg);});
   chan.subscribe();}
 
 /* ============================================================ ẢNH SỔ TAY ============================================================ */
@@ -305,6 +305,7 @@ async function loadOrg(){var r=await Promise.all([sb.from('org_blocks').select('
   if(r.some(function(x){return x.error;})){return;}
   D.blocks=(r[0].data||[]).sort(ord);D.tabs=(r[1].data||[]).sort(ord);D.people=(r[2].data||[]).sort(ord);D.links=(r[3].data||[]).sort(ord);D.profile=(r[4].data||[]).sort(ord);
   try{var sr=await sb.from('org_slides').select('*');D.slides=(!sr.error&&sr.data)?sr.data.sort(ord):[];}catch(e){D.slides=[];}
+  try{var vr=await sb.from('org_videos').select('*');D.orgvids=(!vr.error&&vr.data)?vr.data.sort(ord):[];}catch(e){D.orgvids=[];}
   renderBlocks();renderTabs();renderPeople();renderLinks();renderProfile();}
 async function ins(t,d){busy(true);var r=await sb.from(t).insert(d);busy(false);r.error?toast('Lỗi: '+r.error.message,'err'):toast('Đã thêm ✓','ok');}
 async function upd(t,id,d){busy(true);var r=await sb.from(t).update(d).eq('id',id);busy(false);r.error?toast('Lỗi: '+r.error.message,'err'):toast('Đã lưu ✓','ok');}
@@ -338,7 +339,7 @@ function renderTabs(){var sec=$('#tabSec');if(!cur.block){sec.hidden=true;return
     d.querySelector('[data-a=del]').onclick=function(){if(confirm('Xóa hội đồng + thành viên?')){if(cur.tab===t.id)cur.tab=null;del('org_tabs',t.id);}};
     d.querySelector('[data-a=up]').onclick=function(){move('org_tabs',list,t.id,-1);};
     d.querySelector('[data-a=down]').onclick=function(){move('org_tabs',list,t.id,1);};
-    el.appendChild(d);el.appendChild(slidesPanel('tab',t.id,t.slide_secs));});
+    el.appendChild(d);el.appendChild(slidesPanel('tab',t.id,t.slide_secs));if(units)el.appendChild(orgVideosPanel('tab',t.id));});
   if(!list.length)el.innerHTML='<p class="hint">Chưa có hội đồng.</p>';}
 $('#addTab').onclick=function(){if(!cur.block)return;ins('org_tabs',{block_id:cur.block,name:'Hội đồng mới',intro:'',display_order:nextOrd(D.tabs.filter(function(t){return t.block_id===cur.block;})),active:true});};
 
@@ -374,6 +375,28 @@ function slidesPanel(type,ownerId,secs){
 }
 async function addSlides(type,ownerId,files){busy(true);var list=D.slides.filter(function(s){return s.owner_type===type&&s.owner_id===ownerId;});var base=list.length?Math.max.apply(null,list.map(function(x){return x.display_order||0;})):0;
   try{for(var i=0;i<files.length;i++){var u=await uploadFile(files[i],'slides');var r=await sb.from('org_slides').insert({owner_type:type,owner_id:ownerId,image_url:u.url,storage_path:u.path,display_order:base+i+1,active:true});if(r.error)throw r.error;}toast('Đã thêm '+files.length+' ảnh slide ✓','ok');}catch(e){toast('Lỗi: '+(e.message||e),'err');}busy(false);}
+function ytThumbO(u){var m=String(u||'').match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([A-Za-z0-9_-]{6,})/);return m?('https://img.youtube.com/vi/'+m[1]+'/mqdefault.jpg'):'';}
+function orgVideosPanel(type,ownerId){
+  var wrap=document.createElement('div');wrap.className='slidebox';
+  var list=D.orgvids.filter(function(v){return v.owner_type===type&&v.owner_id===ownerId;}).sort(ord);
+  var thumbs=list.map(function(v){var isYt=(v.kind==='youtube')||/youtube\.com|youtu\.be/.test(v.video_url||'');var th=isYt?ytThumbO(v.video_url):'';
+    return '<div class="sthumb">'+(th?'<img src="'+esc(th)+'">':'<div style="width:100%;height:70px;display:grid;place-items:center;background:#111;color:#fff;font-size:.8rem">🎬 File</div>')+'<div class="sacts"><button data-a="up" data-id="'+v.id+'">▲</button><button data-a="down" data-id="'+v.id+'">▼</button><button data-a="del" data-id="'+v.id+'">✕</button></div></div>';}).join('');
+  wrap.innerHTML='<div class="sbar">🎬 Video giới thiệu đơn vị ('+list.length+')</div>'+
+    '<div class="sthumbs">'+thumbs+'</div>'+
+    '<div class="acts" style="gap:8px;margin:6px 0"><input class="inp vlink" placeholder="Dán link YouTube (https://youtu.be/... )" style="flex:1"><button class="btn btn-sm btn-blue vaddyt">＋ Link YouTube</button></div>'+
+    '<div class="dz vdz"><div><div class="plus">＋</div>Tải video lên — bấm hoặc kéo-thả (điện thoại chọn nhiều)</div></div>';
+  wrap.querySelectorAll('.sthumb button').forEach(function(b){b.onclick=function(){var id=+b.getAttribute('data-id'),a=b.getAttribute('data-a');
+    if(a==='del'){var v=list.find(function(x){return x.id===id;});if(confirm('Xóa video này?')){if(v&&v.storage_path)sb.storage.from('sotay').remove([v.storage_path]);del('org_videos',id);}}
+    else move('org_videos',list,id,a==='up'?-1:1);};});
+  wrap.querySelector('.vaddyt').onclick=function(){var u=(wrap.querySelector('.vlink').value||'').trim();if(!u){toast('Dán link YouTube trước','err');return;}addOrgVideoLink(type,ownerId,u,wrap.querySelector('.vlink'));};
+  dropzoneV(wrap.querySelector('.vdz'),function(fs){addOrgVideos(type,ownerId,fs);});
+  return wrap;
+}
+async function addOrgVideos(type,ownerId,files){busy(true);var list=D.orgvids.filter(function(v){return v.owner_type===type&&v.owner_id===ownerId;});var base=list.length?Math.max.apply(null,list.map(function(x){return x.display_order||0;})):0;
+  try{for(var i=0;i<files.length;i++){var u=await uploadFile(files[i],'videos');var r=await sb.from('org_videos').insert({owner_type:type,owner_id:ownerId,title:'',kind:'file',video_url:u.url,storage_path:u.path,display_order:base+i+1,active:true});if(r.error)throw r.error;}toast('Đã thêm '+files.length+' video ✓','ok');}catch(e){toast('Lỗi: '+(e.message||e),'err');}busy(false);}
+async function addOrgVideoLink(type,ownerId,url,inp){busy(true);var list=D.orgvids.filter(function(v){return v.owner_type===type&&v.owner_id===ownerId;});var ordv=list.length?Math.max.apply(null,list.map(function(x){return x.display_order||0;}))+1:1;
+  var r=await sb.from('org_videos').insert({owner_type:type,owner_id:ownerId,title:'',kind:'youtube',video_url:url,storage_path:'',display_order:ordv,active:true});busy(false);
+  if(r.error){toast('Lỗi: '+r.error.message,'err');}else{if(inp)inp.value='';toast('Đã thêm link YouTube ✓','ok');}}
 
 function renderLinks(){var el=$('#linkList');el.innerHTML='';
   D.links.forEach(function(l){var d=document.createElement('div');d.className='row2';

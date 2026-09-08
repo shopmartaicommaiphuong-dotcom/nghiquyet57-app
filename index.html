@@ -1127,6 +1127,15 @@ body>section,body>header,body>footer{position:relative;z-index:1}
 @keyframes orgscroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 @media (prefers-reduced-motion:reduce){.org-track{animation:none}}
 .org-units-intro{margin:14px 0 0;color:#41506b;font-size:.96rem;line-height:1.75}
+.org-vids{display:grid;gap:18px;margin:16px auto 0;justify-content:center;justify-items:center;width:100%}
+.org-vids.one{grid-template-columns:minmax(0,900px)}
+.org-vids.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.org-vids.many{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+@media(max-width:760px){.org-vids.two,.org-vids.many{grid-template-columns:1fr}}
+.org-vid{width:100%;border-radius:16px;overflow:hidden;background:#000;box-shadow:0 0 0 1px var(--gold-l,#EAC85A),0 18px 38px -22px rgba(70,40,10,.6)}
+.org-vframe{position:relative;width:100%;aspect-ratio:16/9;background:#000}
+.org-vframe iframe,.org-vframe video{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;background:#000;object-fit:contain}
+.org-vcap{padding:9px 13px;background:#fff;color:#23180B;font-weight:800;font-size:.92rem;border-top:2px solid var(--gold-l,#EAC85A)}
 .org-contact{margin-top:14px;background:#fff;border:1px solid #e6edf7;border-radius:14px;padding:4px 16px;box-shadow:0 10px 24px rgba(20,40,90,.08)}
 .ocrow{display:flex;gap:11px;align-items:baseline;padding:11px 0;border-bottom:1px dashed #eef2f8}
 .ocrow:last-child{border-bottom:0}
@@ -1159,8 +1168,24 @@ body>section,body>header,body>footer{position:relative;z-index:1}
   function inits(n){n=(n||'').trim().split(/\s+/);var a=n.length?n[n.length-2]||n[0]:'';var b=n.length?n[n.length-1]:'';return((a[0]||'')+(b[0]||'')).toUpperCase()||'★';}
   var state={active:{}};
   var SLIDES=[];
+  var ORGVIDS=[];
   function slidesOf(type,id){return SLIDES.filter(function(s){return s.owner_type===type&&String(s.owner_id)===String(id);}).sort(function(a,b){return (a.display_order-b.display_order)||(a.id-b.id);});}
   function sliderHTML(list,secs){if(!list.length)return '';var s=(+secs>0?+secs:30);var im=list.map(function(x){return '<div class="org-slide"><img loading="lazy" src="'+esc(x.image_url)+'" alt=""></div>';}).join('');return '<div class="org-slider"><div class="org-track" style="animation-duration:'+s+'s">'+im+im+'</div></div>';}
+  function ytIdO(u){var m=String(u||'').match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([A-Za-z0-9_-]{6,})/);return m?m[1]:'';}
+  function videosOf(type,id){return ORGVIDS.filter(function(v){return v.owner_type===type&&String(v.owner_id)===String(id);}).sort(function(a,b){return (a.display_order-b.display_order)||(a.id-b.id);});}
+  function orgVideosHTML(list){if(!list.length)return '';
+    var cls=(list.length===1?'one':(list.length===2?'two':'many'));
+    var items=list.map(function(v){
+      var yt=(v.kind==='youtube')||/youtube\.com|youtu\.be/.test(v.video_url||'');
+      var inner;
+      if(yt){var id=ytIdO(v.video_url);
+        inner=id?'<iframe src="https://www.youtube.com/embed/'+id+'?rel=0" title="'+esc(v.title||'video')+'" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowfullscreen loading="lazy"></iframe>'
+                :'<video controls preload="metadata" playsinline src="'+esc(v.video_url)+'"></video>';
+      }else{inner='<video controls preload="metadata" playsinline src="'+esc(v.video_url)+'"></video>';}
+      return '<div class="org-vid"><div class="org-vframe">'+inner+'</div>'+(v.title?'<div class="org-vcap">'+esc(v.title)+'</div>':'')+'</div>';
+    }).join('');
+    return '<div class="org-vids '+cls+'">'+items+'</div>';
+  }
   function contactBox(t){if(!t)return '';var r='';
     function row(ic,l,v,href){if(!v)return '';var vv=href?('<a href="'+esc(href)+'" target="_blank" rel="noopener">'+esc(v)+'</a>'):esc(v);return '<div class="ocrow"><span class="ocic">'+ic+'</span><span class="ocl">'+l+'</span><span class="ocv">'+vv+'</span></div>';}
     r+=row('📍','Địa chỉ',t.address,'');
@@ -1191,6 +1216,7 @@ body>section,body>header,body>footer{position:relative;z-index:1}
       var det=el.querySelector('#det-'+block.id);
       if(block.kind==='units'){
         det.innerHTML=sliderHTML(slidesOf('tab',tid),t&&t.slide_secs)+
+          orgVideosHTML(videosOf('tab',tid))+
           (t&&t.intro?'<div class="org-units-intro">'+nl(t.intro)+'</div>':'')+
           contactBox(t);
       }else{
@@ -1234,10 +1260,12 @@ body>section,body>header,body>footer{position:relative;z-index:1}
       sb.from('org_tabs').select('*').eq('active',true),
       sb.from('org_people').select('*').eq('active',true),
       sb.from('org_links').select('*').eq('active',true),
-      sb.from('org_slides').select('*').eq('active',true)
+      sb.from('org_slides').select('*').eq('active',true),
+      sb.from('org_videos').select('*').eq('active',true)
     ]).then(function(r){
       if(r[0].error||r[1].error||r[2].error||r[3].error||r[4].error)return;
       SLIDES=((r[5]&&r[5].data)||[]);
+      ORGVIDS=((r[6]&&r[6].data)||[]);
       render({
         profile:(r[0].data||[]).sort(ord), blocks:(r[1].data||[]).sort(ord),
         tabs:(r[2].data||[]).sort(ord), people:(r[3].data||[]).sort(ord), links:(r[4].data||[]).sort(ord)
@@ -1254,6 +1282,7 @@ body>section,body>header,body>footer{position:relative;z-index:1}
     .on('postgres_changes',{event:'*',schema:'public',table:'org_people'},load)
     .on('postgres_changes',{event:'*',schema:'public',table:'org_links'},load)
     .on('postgres_changes',{event:'*',schema:'public',table:'org_slides'},load)
+    .on('postgres_changes',{event:'*',schema:'public',table:'org_videos'},load)
     .subscribe();
 })();
 </script>
