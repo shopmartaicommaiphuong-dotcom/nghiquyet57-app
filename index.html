@@ -1194,14 +1194,18 @@ body>section,body>header,body>footer{position:relative;z-index:1}
     r+=row('🌐','Website',t.link,t.link);
     return r?('<div class="org-contact">'+r+'</div>'):'';}
 
+  function clean(v,ph){v=(v||'').trim();return (!v||v===ph)?'':v;}
   function personCard(p){
+    var nm=clean(p.name,'Họ tên'),ti=clean(p.title,'Chức danh'),bi=clean(p.bio,'Giới thiệu cụ thể');
     var photo=p.photo_url?('<div class="op-photo"><img loading="lazy" src="'+esc(p.photo_url)+'" alt=""></div>')
-             :('<div class="op-photo op-ph"><span>'+inits(p.name)+'</span></div>');
-    var title=p.title?('<div class="op-title">'+nl(p.title)+'</div>'):'';
-    var bio=p.bio?('<div class="op-bio">'+nl(p.bio)+'</div>'):'';
+             :(nm?('<div class="op-photo op-ph"><span>'+inits(nm)+'</span></div>'):'<div class="op-photo op-ph"></div>');
+    var name=nm?('<div class="op-name">'+esc(nm)+'</div>'):'';
+    var title=ti?('<div class="op-title">'+nl(ti)+'</div>'):'';
+    var bio=bi?('<div class="op-bio">'+nl(bi)+'</div>'):'';
     var link=p.link?('<a class="op-link" href="'+esc(p.link)+'" target="_blank" rel="noopener">Xem thêm →</a>'):'';
     var dh=p.link?(' data-href="'+esc(p.link)+'"'):'';
-    return '<div class="org-person"'+dh+'>'+photo+'<div class="op-body"><div class="op-name">'+esc(p.name)+'</div>'+title+bio+link+'</div></div>';
+    var body=(name+title+bio+link)?('<div class="op-body">'+name+title+bio+link+'</div>'):'';
+    return '<div class="org-person"'+dh+'>'+photo+body+'</div>';
   }
   function renderBlock(el,block,tabs,peopleByTab){
     var tabsHtml=tabs.map(function(t){return '<button class="org-tab" data-t="'+t.id+'">'+esc(t.name)+'</button>';}).join('');

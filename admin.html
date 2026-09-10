@@ -386,7 +386,7 @@ function renderTree(){var root=$('#orgTree');if(!root)return;root.innerHTML='';
             if(!ppl.length){var e=document.createElement('p');e.className='hint';e.textContent='Chưa có thành viên.';tb.appendChild(e);}
             tb.appendChild(grid);
             var ap=document.createElement('button');ap.type='button';ap.className='btn btn-sm btn-blue';ap.style.marginTop='10px';ap.textContent='＋ Thêm người';
-            ap.onclick=function(){ins('org_people',{tab_id:t.id,name:'Họ tên',title:'',bio:'',link:'',display_order:nextOrd(childPeople(t.id)),active:true});};
+            ap.onclick=function(){ins('org_people',{tab_id:t.id,name:'',title:'',bio:'',link:'',display_order:nextOrd(childPeople(t.id)),active:true});};
             tb.appendChild(ap);
           }
         });
