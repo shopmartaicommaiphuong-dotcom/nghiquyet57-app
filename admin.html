@@ -108,7 +108,27 @@ textarea.inp{resize:vertical;min-height:60px;line-height:1.45}
 .tmeta{color:#7c8aa6;font-size:.82rem;font-weight:700}
 .tmeta i{color:#c0392b;font-style:normal}
 .tbody{padding:4px 12px 12px;border-top:1px dashed #e3ebf6}
+/* ===== TIN TỨC: editor + modal ===== */
+#newsModal{position:fixed;inset:0;z-index:9999;display:none;background:rgba(15,25,45,.6);backdrop-filter:blur(2px);overflow-y:auto;padding:20px 12px}
+#newsModal.open{display:block}
+#newsModal .nwbox{max-width:880px;margin:0 auto;background:#fff;border-radius:16px;box-shadow:0 30px 70px rgba(0,0,0,.45);overflow:hidden}
+.nwhead{display:flex;justify-content:space-between;align-items:center;padding:15px 20px;border-bottom:1px solid var(--line);font-size:1.05rem;font-weight:800}
+.nwx{border:0;background:transparent;font-size:1.6rem;cursor:pointer;color:#8aa;line-height:1}
+.nwbody{padding:16px 20px;max-height:72vh;overflow-y:auto}
+.nwl{display:block;font-weight:700;font-size:.86rem;margin:13px 0 5px;color:var(--ink)}
+.nwrow{display:grid;grid-template-columns:1fr 130px 190px;gap:12px;align-items:end}@media(max-width:600px){.nwrow{grid-template-columns:1fr}}
+.nwfoot{display:flex;justify-content:flex-end;gap:10px;padding:14px 20px;border-top:1px solid var(--line);background:#f8fafd}
+#nw-editWrap{border:1px solid var(--line);border-radius:10px;overflow:hidden}
+#newsEditor .ql-editor{min-height:240px;font-family:inherit;font-size:14.5px}
+.ql-snow .ql-editor img{max-width:100%}
+.attgrid{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}
+.attx{position:relative;width:112px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#f8fafd;padding:6px;text-align:center}
+.attx img{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:6px;display:block}
+.attx .ai{font-size:1.7rem;display:block;padding:6px}
+.attx .an{font-size:11px;color:#5b6b86;display:block;word-break:break-word;margin-top:4px;line-height:1.3}
+.attx button{position:absolute;top:2px;right:2px;border:0;background:#c62828;color:#fff;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:11px;line-height:1}
 </style>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.snow.min.css" rel="stylesheet">
 </head>
 <body>
 <div class="wrap">
@@ -141,6 +161,7 @@ textarea.inp{resize:vertical;min-height:60px;line-height:1.45}
       <button data-p="portal">🔗 Cổng kết nối</button>
       <button data-p="profile">📄 Hồ sơ năng lực</button>
       <button data-p="video">🎬 Video</button>
+      <button data-p="news">📰 Tin tức</button>
     </div>
 
     <div id="p-img"></div>
@@ -185,6 +206,15 @@ textarea.inp{resize:vertical;min-height:60px;line-height:1.45}
         <div id="vidList"></div>
       </div>
     </div>
+
+    <div id="p-news" hidden>
+      <div class="sec">
+        <div class="sec-h"><div class="ic i-gal">📰</div><h3>Tin tức hoạt động — hiển thị dưới cùng trang chủ</h3></div>
+        <p class="desc">Soạn bài viết với trình soạn thảo đầy đủ (định dạng chữ, link, chèn/kéo-thả ảnh, đính kèm mọi file). Đồng bộ <b>realtime</b>.</p>
+        <button class="btn btn-sm btn-blue" id="addNews">＋ Thêm bài viết</button>
+        <div id="newsList" style="margin-top:12px"></div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -192,9 +222,11 @@ textarea.inp{resize:vertical;min-height:60px;line-height:1.45}
 <div class="toast" id="toast"></div>
 <input type="file" id="filePick" accept="image/*" hidden>
 <input type="file" id="filePickV" accept="video/*" hidden>
+<input type="file" id="filePickA" hidden>
 
 <script src="config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.min.js"></script>
 <script>
 var SLOTS={hero:{name:"Ảnh Hero (đầu trang)",ic:"i-hero",emoji:"🏙️",desc:"Ảnh lớn trên cùng.",single:true},
   poster:{name:"Poster Đề án Trung tâm",ic:"i-poster",emoji:"📜",desc:"Poster Đề án ở khối kết.",single:true},
@@ -216,11 +248,11 @@ async function boot(){var s=(await sb.auth.getSession()).data.session;if(s)showA
 $('#loginForm').addEventListener('submit',async function(e){e.preventDefault();$('#loginMsg').textContent='Đang đăng nhập…';var r=await sb.auth.signInWithPassword({email:$('#email').value.trim(),password:$('#pass').value});if(r.error){$('#loginMsg').className='msg err';$('#loginMsg').textContent='Sai email/mật khẩu. '+r.error.message;}});
 $('#logout').addEventListener('click',function(){sb.auth.signOut();});
 function showLogin(){$('#loginView').hidden=false;$('#appView').hidden=true;}
-function showApp(s){$('#loginView').hidden=true;$('#appView').hidden=false;$('#whoami').textContent='Đã đăng nhập: '+(s.user&&s.user.email||'admin')+' · realtime';loadImages();loadOrg();loadVideos();subscribe();}
+function showApp(s){$('#loginView').hidden=true;$('#appView').hidden=false;$('#whoami').textContent='Đã đăng nhập: '+(s.user&&s.user.email||'admin')+' · realtime';loadImages();loadOrg();loadVideos();loadNews();subscribe();}
 
 document.querySelectorAll('.tabbar button').forEach(function(b){b.onclick=function(){
   document.querySelectorAll('.tabbar button').forEach(function(x){x.classList.remove('on');});b.classList.add('on');
-  ['img','lead','portal','profile','video'].forEach(function(p){$('#p-'+p).hidden=(p!==b.getAttribute('data-p'));});};});
+  ['img','lead','portal','profile','video','news'].forEach(function(p){$('#p-'+p).hidden=(p!==b.getAttribute('data-p'));});};});
 
 /* ===== UPLOAD + DROPZONE dùng chung ===== */
 async function uploadFile(file,folder){
@@ -255,6 +287,7 @@ var chan=null;
 function subscribe(){if(chan)return;chan=sb.channel('admin-all');
   chan.on('postgres_changes',{event:'*',schema:'public',table:'sotay_images'},loadImages);
   chan.on('postgres_changes',{event:'*',schema:'public',table:'sotay_videos'},loadVideos);
+  chan.on('postgres_changes',{event:'*',schema:'public',table:'sotay_news'},loadNews);
   ['org_blocks','org_tabs','org_people','org_links','org_profile','org_slides','org_videos'].forEach(function(t){chan.on('postgres_changes',{event:'*',schema:'public',table:t},loadOrg);});
   chan.subscribe();}
 
@@ -537,6 +570,89 @@ async function addVideoLink(){var url=($('#vidYt').value||'').trim();if(!url){to
   var r=await sb.from('sotay_videos').insert({title:'',kind:'youtube',video_url:url,storage_path:'',display_order:ordv,active:true});
   busy(false);if(r.error){toast('Lỗi: '+r.error.message,'err');}else{$('#vidYt').value='';toast('Đã thêm link YouTube ✓','ok');}}
 (function(){var dz=$('#vidDrop');if(dz)dropzoneV(dz,addVideoFiles);var yb=$('#addYt');if(yb)yb.onclick=addVideoLink;})();
+
+/* ============================================================ TIN TỨC (editor Quill) ============================================================ */
+var filePickA=$('#filePickA');
+filePickA.addEventListener('change',function(e){var fs=e.target.files;var cb=filePickA._cb;e.target.value='';if(fs&&fs.length&&cb)cb(fs);});
+function pickAny(multiple,cb){filePickA.multiple=!!multiple;filePickA._cb=cb;filePickA.click();}
+var NEWS=[],quill=null,curNews=null,newsAtts=[],newsCover=null;
+async function loadNews(){if(!sb)return;var r=await sb.from('sotay_news').select('*').order('display_order').order('id',{ascending:false});if(r.error)return;NEWS=r.data||[];renderNews();}
+function renderNews(){var el=$('#newsList');if(!el)return;el.innerHTML='';
+  if(!NEWS.length){el.innerHTML='<p class="hint">Chưa có bài viết. Bấm "＋ Thêm bài viết".</p>';return;}
+  NEWS.forEach(function(n){var d=document.createElement('div');d.className='row2';
+    d.innerHTML='<div class="ordbox"><button class="btn btn-sm mini" data-a="up">▲</button><button class="btn btn-sm mini" data-a="down">▼</button></div>'+
+      (n.cover_url?'<img src="'+esc(n.cover_url)+'" style="width:128px;aspect-ratio:16/9;object-fit:cover;border-radius:8px;flex:none">':'<div class="chip" style="flex:none">📰</div>')+
+      '<div class="grow"><b style="font-size:1rem">'+esc(n.title||'(Chưa có tiêu đề)')+'</b><div class="hint">'+esc(n.excerpt||'')+'</div><span class="hint">'+(n.active?'đang hiện':'đang ẩn')+(n.tags?(' · 🏷️ '+esc(n.tags)):'')+'</span></div>'+
+      '<div class="acts"><button class="btn btn-sm btn-blue" data-a="edit">✏️ Sửa</button><button class="btn btn-sm '+(n.active?'mini':'btn-gold')+'" data-a="tg">'+(n.active?'Ẩn':'Hiện')+'</button><button class="btn btn-sm btn-red" data-a="del">Xóa</button></div>';
+    d.querySelector('[data-a=edit]').onclick=function(){openNews(n);};
+    d.querySelector('[data-a=tg]').onclick=function(){upd('sotay_news',n.id,{active:!n.active});};
+    d.querySelector('[data-a=del]').onclick=function(){if(confirm('Xóa bài viết này?')){if(n.cover_path)sb.storage.from('sotay').remove([n.cover_path]);del('sotay_news',n.id);}};
+    d.querySelector('[data-a=up]').onclick=function(){move('sotay_news',NEWS,n.id,-1);};
+    d.querySelector('[data-a=down]').onclick=function(){move('sotay_news',NEWS,n.id,1);};
+    el.appendChild(d);});
+}
+function ensureQuill(){if(quill)return quill;
+  quill=new Quill('#newsEditor',{theme:'snow',placeholder:'Soạn nội dung — cỡ chữ, in đậm, màu sắc, danh sách, chèn ảnh & video, tạo link...',
+    modules:{toolbar:{container:[[{'header':[1,2,3,false]}],[{'size':['small',false,'large','huge']}],['bold','italic','underline','strike'],[{'color':[]},{'background':[]}],[{'list':'ordered'},{'list':'bullet'}],[{'align':[]}],[{'indent':'-1'},{'indent':'+1'}],['blockquote','code-block'],['link','image','video'],['clean']],
+      handlers:{image:function(){pickFiles(true,function(fs){for(var i=0;i<fs.length;i++)insertEditorImage(fs[i]);});}}}}});
+  var root=quill.root;
+  root.addEventListener('drop',function(e){var fs=e.dataTransfer&&e.dataTransfer.files;if(fs&&fs.length){var imgs=[];for(var i=0;i<fs.length;i++)if(/^image\//.test(fs[i].type))imgs.push(fs[i]);if(imgs.length){e.preventDefault();e.stopPropagation();imgs.forEach(insertEditorImage);}}},true);
+  root.addEventListener('paste',function(e){var items=e.clipboardData&&e.clipboardData.items;if(!items)return;for(var i=0;i<items.length;i++){if(items[i].type&&items[i].type.indexOf('image')===0){var fl=items[i].getAsFile();if(fl){e.preventDefault();insertEditorImage(fl);}}}});
+  return quill;}
+async function insertEditorImage(file){if(!file)return;busy(true);try{var u=await uploadFile(file,'news');var q=ensureQuill();var range=q.getSelection(true)||{index:q.getLength()};q.insertEmbed(range.index,'image',u.url,'user');q.setSelection(range.index+1);}catch(e){toast('Lỗi ảnh: '+(e.message||e),'err');}busy(false);}
+function attKind(file){var t=(file.type||'');if(t.indexOf('image')===0)return 'image';if(t.indexOf('video')===0)return 'video';return 'file';}
+function renderNewsCover(){var c=$('#nw-coverPrev');if(!newsCover){c.innerHTML='';return;}c.innerHTML='<img src="'+esc(newsCover.url)+'" style="width:220px;aspect-ratio:16/9;object-fit:cover;border-radius:10px"><button class="btn btn-sm btn-red" type="button" id="nw-coverDel">Xóa ảnh</button>';$('#nw-coverDel').onclick=function(){newsCover=null;renderNewsCover();};}
+function renderNewsAtts(){var c=$('#nw-attList');if(!newsAtts.length){c.innerHTML='<span class="hint">Chưa có đính kèm.</span>';return;}
+  c.innerHTML=newsAtts.map(function(a,i){var body=(a.kind==='image')?('<img src="'+esc(a.url)+'">'):('<span class="ai">'+(a.kind==='video'?'🎬':'📎')+'</span>');return '<div class="attx">'+body+'<span class="an">'+esc(a.name||a.kind)+'</span><button type="button" data-i="'+i+'">✕</button></div>';}).join('');
+  c.querySelectorAll('button[data-i]').forEach(function(b){b.onclick=function(){newsAtts.splice(+b.getAttribute('data-i'),1);renderNewsAtts();};});}
+async function addNewsCover(file){if(!file)return;busy(true);try{var u=await uploadFile(file,'news');newsCover={url:u.url,path:u.path};renderNewsCover();}catch(e){toast('Lỗi: '+(e.message||e),'err');}busy(false);}
+async function addNewsAtts(files){busy(true);try{for(var i=0;i<files.length;i++){var u=await uploadFile(files[i],'news');newsAtts.push({name:files[i].name,url:u.url,path:u.path,kind:attKind(files[i])});}renderNewsAtts();}catch(e){toast('Lỗi: '+(e.message||e),'err');}busy(false);}
+function openNews(n){curNews=n||null;newsAtts=(n&&Array.isArray(n.attachments))?n.attachments.slice():[];newsCover=(n&&n.cover_url)?{url:n.cover_url,path:n.cover_path||''}:null;
+  $('#nw-title').value=n?(n.title||''):'';$('#nw-excerpt').value=n?(n.excerpt||''):'';$('#nw-tags').value=n?(n.tags||''):'';
+  $('#nw-order').value=n?(n.display_order||0):(NEWS.length?Math.max.apply(null,NEWS.map(function(x){return x.display_order||0;}))+1:1);
+  $('#nw-active').checked=n?!!n.active:true;
+  ensureQuill();quill.root.innerHTML=(n&&n.content)||'';
+  renderNewsCover();renderNewsAtts();$('#newsModal').classList.add('open');}
+function closeNews(){$('#newsModal').classList.remove('open');}
+async function saveNews(){var t=$('#nw-title').value.trim();if(!t){toast('Nhập tiêu đề đã','err');return;}
+  var data={title:t,excerpt:$('#nw-excerpt').value,content:quill?quill.root.innerHTML:'',cover_url:newsCover?newsCover.url:'',cover_path:newsCover?(newsCover.path||''):'',attachments:newsAtts,tags:$('#nw-tags').value,display_order:(+$('#nw-order').value||0),active:$('#nw-active').checked};
+  busy(true);var r=curNews?(await sb.from('sotay_news').update(data).eq('id',curNews.id)):(await sb.from('sotay_news').insert(data));busy(false);
+  if(r.error){toast('Lỗi lưu: '+r.error.message,'err');}else{toast('Đã lưu bài viết ✓','ok');closeNews();}}
+(function(){var ab=$('#addNews');if(ab)ab.onclick=function(){openNews(null);};
+  var x=$('#nw-x');if(x)x.onclick=closeNews;var cc=$('#nw-cancel');if(cc)cc.onclick=closeNews;
+  var sv=$('#nw-save');if(sv)sv.onclick=saveNews;
+  var cd=$('#nw-coverDz');if(cd)dropzone(cd,false,function(fs){addNewsCover(fs[0]);});
+  var ad=$('#nw-attDz');if(ad){ad.addEventListener('click',function(){pickAny(true,addNewsAtts);});
+    ['dragenter','dragover'].forEach(function(ev){ad.addEventListener(ev,function(e){e.preventDefault();e.stopPropagation();ad.classList.add('drag');});});
+    ['dragleave','drop'].forEach(function(ev){ad.addEventListener(ev,function(e){e.preventDefault();e.stopPropagation();ad.classList.remove('drag');});});
+    ad.addEventListener('drop',function(e){var fs=e.dataTransfer&&e.dataTransfer.files;if(fs&&fs.length)addNewsAtts(fs);});}
+  var m=$('#newsModal');if(m)m.addEventListener('click',function(e){if(e.target===m)closeNews();});
+})();
 </script>
+
+<div id="newsModal">
+ <div class="nwbox">
+  <div class="nwhead"><span>📰 Bài viết — Tin tức hoạt động</span><button type="button" id="nw-x" class="nwx">&times;</button></div>
+  <div class="nwbody">
+    <label class="nwl">Tiêu đề *</label><input class="inp" id="nw-title" placeholder="Tiêu đề bài viết">
+    <label class="nwl">Mô tả ngắn (hiển thị ngoài thẻ tin)</label><textarea class="inp" id="nw-excerpt" placeholder="Tóm tắt ngắn gọn"></textarea>
+    <label class="nwl">Ảnh đại diện (16:9)</label>
+    <div class="dz" id="nw-coverDz"><div><div class="plus">＋</div>Kéo-thả hoặc bấm để chọn ảnh đại diện</div></div>
+    <div id="nw-coverPrev" style="margin:8px 0;display:flex;gap:10px;align-items:center;flex-wrap:wrap"></div>
+    <label class="nwl">Nội dung — trình soạn thảo đầy đủ (Gmail/Zalo)</label>
+    <div id="nw-editWrap"><div id="newsEditor"></div></div>
+    <p class="hint">Cỡ chữ · đậm/nghiêng/gạch chân · màu chữ &amp; nền · danh sách · căn lề · trích dẫn · <b>tạo link</b> · <b>chèn ảnh</b> (bấm/kéo-thả/dán) · chèn video · xoá định dạng.</p>
+    <label class="nwl">Đính kèm ảnh / video / file (mọi định dạng · chọn nhiều)</label>
+    <div class="dz" id="nw-attDz"><div><div class="plus">＋</div>Kéo-thả hoặc bấm — ảnh JPEG/PNG, video, PDF/Word/Excel/PPT... · PC kéo-thả · điện thoại chọn nhiều cùng lúc</div></div>
+    <div class="attgrid" id="nw-attList"></div>
+    <div class="nwrow">
+      <div><label class="nwl">Tags (phân cách dấu phẩy)</label><input class="inp" id="nw-tags" placeholder="tin-tuc, tap-huan"></div>
+      <div><label class="nwl">Thứ tự</label><input class="inp" id="nw-order" type="number" value="0"></div>
+      <div><label class="nwl">Kích hoạt</label><label class="chk" style="margin-top:4px"><input type="checkbox" id="nw-active" checked> Hiện ra trang chủ</label></div>
+    </div>
+  </div>
+  <div class="nwfoot"><button class="btn btn-ghost" type="button" id="nw-cancel">Hủy</button><button class="btn btn-blue" type="button" id="nw-save">💾 Lưu bài viết</button></div>
+ </div>
+</div>
 </body>
 </html>
