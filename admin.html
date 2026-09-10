@@ -90,6 +90,24 @@ textarea.inp{resize:vertical;min-height:60px;line-height:1.45}
 .cfgwarn{background:#fff6e6;border:1.5px solid #f0d089;color:#7a5b00;border-radius:14px;padding:14px 16px;font-size:13.5px;margin-top:16px}
 [hidden]{display:none!important}
 @media(max-width:520px){.slot .thumb{width:100%;height:150px}}
+/* ===== CÂY TỔ CHỨC (accordion cha–con) ===== */
+.sec>.sec-h{cursor:pointer;position:relative;padding-right:26px}
+.sec>.sec-h::after{content:"▾";position:absolute;right:4px;top:2px;color:#9aa6bd;font-size:.9rem;transition:transform .2s}
+.sec.collapsed>.sec-h::after{transform:rotate(-90deg)}
+.sec.collapsed>*:not(.sec-h){display:none!important}
+.tnode{border-radius:12px;margin:8px 0}
+.tlvl1{border:1px solid var(--line);background:#fff;box-shadow:0 6px 16px -12px rgba(30,50,90,.35)}
+.tlvl2{border:1px dashed #c9d6ea;background:#fbfdff;margin-left:20px;position:relative}
+.tlvl2::before{content:"";position:absolute;left:-12px;top:0;bottom:0;width:2px;background:linear-gradient(#dbe6f5,transparent)}
+.thead{display:flex;align-items:center;gap:8px;padding:9px 12px;cursor:pointer;user-select:none}
+.ttog{flex:none;width:26px;height:26px;border-radius:8px;border:1px solid var(--line);background:#eef4fc;color:#33507e;font-weight:900;cursor:pointer;line-height:1}
+.tlabel{flex:1;min-width:0}
+.tlabel b{font-size:1rem}
+.tibadge{display:inline-block;font-size:.72rem;font-weight:800;padding:2px 8px;border-radius:100px;background:linear-gradient(135deg,#1e63b0,#12336b);color:#fff;margin-right:6px;vertical-align:middle}
+.tibadge.sub{background:linear-gradient(135deg,#8a6d16,#c6971e)}
+.tmeta{color:#7c8aa6;font-size:.82rem;font-weight:700}
+.tmeta i{color:#c0392b;font-style:normal}
+.tbody{padding:4px 12px 12px;border-top:1px dashed #e3ebf6}
 </style>
 </head>
 <body>
@@ -129,23 +147,10 @@ textarea.inp{resize:vertical;min-height:60px;line-height:1.45}
 
     <div id="p-lead" hidden>
       <div class="sec">
-        <div class="sec-h"><div class="ic i-hero">🏛️</div><h3>Module TO (khối lớn)</h3></div>
-        <p class="desc">Ví dụ "BAN LÃNH ĐẠO VIỆN". Bấm <b>Chọn</b> để quản lý hội đồng bên trong.</p>
-        <div id="blockList"></div>
-        <button class="btn btn-sm btn-blue" id="addBlock">＋ Thêm Module TO</button>
-      </div>
-      <div class="sec" id="tabSec" hidden>
-        <div class="sec-h"><div class="ic i-gal">📁</div><h3>Hội đồng (tab) trong Module</h3></div>
-        <p class="crumb" id="crumbBlock"></p>
-        <div id="tabList"></div>
-        <button class="btn btn-sm btn-blue" id="addTab">＋ Thêm hội đồng</button>
-      </div>
-      <div class="sec" id="peopleSec" hidden>
-        <div class="sec-h"><div class="ic i-poster">👤</div><h3>Thành viên trong hội đồng</h3></div>
-        <p class="crumb" id="crumbTab"></p>
-        <p class="hint" style="margin:-4px 0 12px">📷 Ảnh: <b>bấm vào ô ảnh</b> để chọn, hoặc <b>kéo-thả</b> ảnh vào (máy tính); điện thoại bấm để chọn từ thư viện/chụp.</p>
-        <div class="grid" id="peopleList" style="grid-template-columns:repeat(auto-fill,minmax(240px,1fr))"></div>
-        <button class="btn btn-sm btn-blue" id="addPerson" style="margin-top:12px">＋ Thêm người</button>
+        <div class="sec-h"><div class="ic i-hero">🏛️</div><h3>Cây tổ chức — Module ▸ Hội đồng/Đơn vị ▸ Thành viên</h3></div>
+        <p class="desc">Bấm mũi tên ▸ để mở/gập từng cấp. Mọi thứ lồng đúng "phần trong phần" — dễ hình dung, gọn gàng.</p>
+        <div id="orgTree"></div>
+        <button class="btn btn-sm btn-blue" id="addBlock" style="margin-top:12px">＋ Thêm Module TO</button>
       </div>
     </div>
 
@@ -306,57 +311,100 @@ async function loadOrg(){var r=await Promise.all([sb.from('org_blocks').select('
   D.blocks=(r[0].data||[]).sort(ord);D.tabs=(r[1].data||[]).sort(ord);D.people=(r[2].data||[]).sort(ord);D.links=(r[3].data||[]).sort(ord);D.profile=(r[4].data||[]).sort(ord);
   try{var sr=await sb.from('org_slides').select('*');D.slides=(!sr.error&&sr.data)?sr.data.sort(ord):[];}catch(e){D.slides=[];}
   try{var vr=await sb.from('org_videos').select('*');D.orgvids=(!vr.error&&vr.data)?vr.data.sort(ord):[];}catch(e){D.orgvids=[];}
-  renderBlocks();renderTabs();renderPeople();renderLinks();renderProfile();}
+  renderTree();renderLinks();renderProfile();}
 async function ins(t,d){busy(true);var r=await sb.from(t).insert(d);busy(false);r.error?toast('Lỗi: '+r.error.message,'err'):toast('Đã thêm ✓','ok');}
 async function upd(t,id,d){busy(true);var r=await sb.from(t).update(d).eq('id',id);busy(false);r.error?toast('Lỗi: '+r.error.message,'err'):toast('Đã lưu ✓','ok');}
 async function del(t,id){busy(true);var r=await sb.from(t).delete().eq('id',id);busy(false);r.error?toast('Lỗi: '+r.error.message,'err'):toast('Đã xóa','ok');}
 async function move(t,list,id,dir){var i=list.findIndex(function(x){return x.id===id;});var j=i+dir;if(j<0||j>=list.length)return;busy(true);await sb.from(t).update({display_order:list[j].display_order}).eq('id',list[i].id);await sb.from(t).update({display_order:list[i].display_order}).eq('id',list[j].id);busy(false);}
 
-function renderBlocks(){var el=$('#blockList');el.innerHTML='';
-  D.blocks.forEach(function(b){var d=document.createElement('div');d.className='row2'+(cur.block===b.id?' sel':'');
-    var isU=(b.kind==='units');
-    d.innerHTML='<div class="grow"><input class="inp" data-f="title" value="'+esc(b.title)+'" placeholder="Tên Module TO"><input class="inp" data-f="subtitle" value="'+esc(b.subtitle)+'" placeholder="Mô tả ngắn"><label class="chk">Loại Module: <select class="inp" style="width:auto" data-f="kind"><option value="personnel"'+(isU?'':' selected')+'>👤 Nhân sự (thẻ người)</option><option value="units"'+(isU?' selected':'')+'>🏢 Các đơn vị (slider + liên hệ)</option></select></label></div><div class="acts"><button class="btn btn-sm btn-gold" data-a="save">Lưu</button><button class="btn btn-sm '+(cur.block===b.id?'btn-blue':'mini')+'" data-a="pick">'+(cur.block===b.id?'Đang chọn':'Chọn')+'</button><button class="btn btn-sm '+(b.active?'mini':'btn-gold')+'" data-a="tg">'+(b.active?'Ẩn':'Hiện')+'</button><button class="btn btn-sm btn-red" data-a="del">Xóa</button></div>';
-    d.querySelector('[data-f=kind]').addEventListener('change',function(){upd('org_blocks',b.id,{kind:this.value});});
-    d.querySelector('[data-a=save]').onclick=function(){upd('org_blocks',b.id,{title:$('[data-f=title]',d).value,subtitle:$('[data-f=subtitle]',d).value,kind:$('[data-f=kind]',d).value});};
-    d.querySelector('[data-a=pick]').onclick=function(){cur.block=b.id;cur.tab=null;renderBlocks();renderTabs();renderPeople();};
-    d.querySelector('[data-a=tg]').onclick=function(){upd('org_blocks',b.id,{active:!b.active});};
-    d.querySelector('[data-a=del]').onclick=function(){if(confirm('Xóa Module + toàn bộ bên trong?')){if(cur.block===b.id){cur.block=null;cur.tab=null;}del('org_blocks',b.id);}};
-    el.appendChild(d);el.appendChild(slidesPanel('block',b.id,b.slide_secs));});
-  if(!D.blocks.length)el.innerHTML='<p class="hint">Chưa có Module.</p>';}
+var OPEN={};
+function isOpen(k,def){if(OPEN[k]===undefined)OPEN[k]=def;return OPEN[k];}
+function tog(k){OPEN[k]=!OPEN[k];renderTree();}
+function childTabs(bid){return D.tabs.filter(function(t){return t.block_id===bid;}).sort(ord);}
+function childPeople(tid){return D.people.filter(function(p){return p.tab_id===tid;}).sort(ord);}
+
+function blockRow(b){var d=document.createElement('div');d.className='row2';var isU=(b.kind==='units');
+  d.innerHTML='<div class="grow"><input class="inp" data-f="title" value="'+esc(b.title)+'" placeholder="Tên Module TO"><input class="inp" data-f="subtitle" value="'+esc(b.subtitle)+'" placeholder="Mô tả ngắn"><label class="chk">Loại Module: <select class="inp" style="width:auto" data-f="kind"><option value="personnel"'+(isU?'':' selected')+'>👤 Nhân sự (thẻ người)</option><option value="units"'+(isU?' selected':'')+'>🏢 Các đơn vị (slider + video + liên hệ)</option></select></label></div><div class="acts"><button class="btn btn-sm btn-gold" data-a="save">Lưu</button><button class="btn btn-sm '+(b.active?'mini':'btn-gold')+'" data-a="tg">'+(b.active?'Ẩn':'Hiện')+'</button><button class="btn btn-sm btn-red" data-a="del">Xóa</button></div>';
+  d.querySelector('[data-f=kind]').addEventListener('change',function(){upd('org_blocks',b.id,{kind:this.value});});
+  d.querySelector('[data-a=save]').onclick=function(){upd('org_blocks',b.id,{title:$('[data-f=title]',d).value,subtitle:$('[data-f=subtitle]',d).value,kind:$('[data-f=kind]',d).value});};
+  d.querySelector('[data-a=tg]').onclick=function(){upd('org_blocks',b.id,{active:!b.active});};
+  d.querySelector('[data-a=del]').onclick=function(){if(confirm('Xóa Module + toàn bộ bên trong?'))del('org_blocks',b.id);};
+  return d;}
+
+function tabRow(t,units){var d=document.createElement('div');d.className='row2';
+  var contactHtml=units
+    ?('<input class="inp" data-f="address" value="'+esc(t.address||'')+'" placeholder="📍 Địa chỉ đơn vị"><input class="inp" data-f="phone" value="'+esc(t.phone||'')+'" placeholder="☎️ Điện thoại"><input class="inp" data-f="email" value="'+esc(t.email||'')+'" placeholder="✉️ Email"><input class="inp" data-f="link" value="'+esc(t.link||'')+'" placeholder="🌐 Website (link truy cập)">')
+    :('<input class="inp" data-f="link" value="'+esc(t.link||'')+'" placeholder="Link truy cập đích của hội đồng (để trống nếu không có)">');
+  d.innerHTML='<div class="ordbox"><button class="btn btn-sm mini" data-a="up">▲</button><button class="btn btn-sm mini" data-a="down">▼</button></div><div class="grow"><input class="inp" data-f="name" value="'+esc(t.name)+'" placeholder="'+(units?'Tên đơn vị':'Tên hội đồng')+'"><textarea class="inp" data-f="intro" placeholder="'+(units?'Nội dung giới thiệu đơn vị':'Giới thiệu ngắn')+'">'+esc(t.intro)+'</textarea>'+contactHtml+'</div><div class="acts"><button class="btn btn-sm btn-gold" data-a="save">Lưu</button><button class="btn btn-sm '+(t.active?'mini':'btn-gold')+'" data-a="tg">'+(t.active?'Ẩn':'Hiện')+'</button><button class="btn btn-sm btn-red" data-a="del">Xóa</button></div>';
+  d.querySelector('[data-a=save]').onclick=function(){var o={name:$('[data-f=name]',d).value,intro:$('[data-f=intro]',d).value,link:$('[data-f=link]',d).value};var ad=$('[data-f=address]',d),ph=$('[data-f=phone]',d),em=$('[data-f=email]',d);if(ad)o.address=ad.value;if(ph)o.phone=ph.value;if(em)o.email=em.value;upd('org_tabs',t.id,o);};
+  d.querySelector('[data-a=tg]').onclick=function(){upd('org_tabs',t.id,{active:!t.active});};
+  d.querySelector('[data-a=del]').onclick=function(){if(confirm('Xóa hội đồng/đơn vị + toàn bộ bên trong?'))del('org_tabs',t.id);};
+  var list=childTabs(t.block_id);
+  d.querySelector('[data-a=up]').onclick=function(){move('org_tabs',list,t.id,-1);};
+  d.querySelector('[data-a=down]').onclick=function(){move('org_tabs',list,t.id,1);};
+  return d;}
+
+function personCard(p,list){var c=document.createElement('div');c.className='pcard'+(p.active?'':' off');
+  c.innerHTML='<div class="ph">'+(p.photo_url?'<img src="'+esc(p.photo_url)+'">':'<div class="noimg">chưa có ảnh</div>')+'<div class="ovl">📷 Bấm hoặc kéo-thả ảnh</div></div><div class="pad"><input class="inp" data-f="name" value="'+esc(p.name)+'" placeholder="Tên (vd: ThS. Phạm Quốc Đông)"><input class="inp" data-f="title" value="'+esc(p.title)+'" placeholder="Chức danh"><textarea class="inp" data-f="bio" placeholder="Giới thiệu cụ thể">'+esc(p.bio)+'</textarea><input class="inp" data-f="link" value="'+esc(p.link)+'" placeholder="Link đích (để trống nếu không có)"><div class="acts"><button class="btn btn-sm btn-gold" data-a="save">Lưu</button><button class="btn btn-sm mini" data-a="up">▲</button><button class="btn btn-sm mini" data-a="down">▼</button><button class="btn btn-sm '+(p.active?'mini':'btn-gold')+'" data-a="tg">'+(p.active?'Ẩn':'Hiện')+'</button><button class="btn btn-sm btn-red" data-a="del">Xóa</button></div></div>';
+  var ph=c.querySelector('.ph');dropzone(ph,false,function(fs){replacePersonPhoto(p,fs[0]);});
+  c.querySelector('[data-a=save]').onclick=function(){upd('org_people',p.id,{name:$('[data-f=name]',c).value,title:$('[data-f=title]',c).value,bio:$('[data-f=bio]',c).value,link:$('[data-f=link]',c).value});};
+  c.querySelector('[data-a=tg]').onclick=function(){upd('org_people',p.id,{active:!p.active});};
+  c.querySelector('[data-a=del]').onclick=function(){if(confirm('Xóa người này?')){if(p.storage_path)sb.storage.from('sotay').remove([p.storage_path]);del('org_people',p.id);}};
+  c.querySelector('[data-a=up]').onclick=function(){move('org_people',list,p.id,-1);};
+  c.querySelector('[data-a=down]').onclick=function(){move('org_people',list,p.id,1);};
+  return c;}
+
+function treeNode(level,key,defOpen,badge,titleTxt,meta,buildBody){
+  var node=document.createElement('div');node.className='tnode tlvl'+level;
+  var open=isOpen(key,defOpen);
+  var head=document.createElement('div');head.className='thead';
+  var tw=document.createElement('button');tw.type='button';tw.className='ttog';tw.textContent=open?'▾':'▸';tw.onclick=function(){tog(key);};
+  var lbl=document.createElement('div');lbl.className='tlabel';lbl.innerHTML='<span class="tibadge">'+badge+'</span> <b>'+esc(titleTxt||'(chưa đặt tên)')+'</b>'+(meta?' <span class="tmeta">'+meta+'</span>':'');
+  lbl.onclick=function(){tog(key);};
+  head.appendChild(tw);head.appendChild(lbl);node.appendChild(head);
+  if(open){var body=document.createElement('div');body.className='tbody';buildBody(body);node.appendChild(body);}
+  return node;}
+
+function renderTree(){var root=$('#orgTree');if(!root)return;root.innerHTML='';
+  if(!D.blocks.length){root.innerHTML='<p class="hint">Chưa có Module. Bấm "＋ Thêm Module TO" bên dưới.</p>';return;}
+  D.blocks.sort(ord).forEach(function(b){var isU=(b.kind==='units');
+    var tabs=childTabs(b.id);
+    var bmeta=(isU?'Các đơn vị':'Nhân sự')+' · '+tabs.length+' mục'+(b.active?'':' · <i>đang ẨN</i>');
+    var bnode=treeNode(1,'b'+b.id,true,'🏛️ Module',b.title,bmeta,function(body){
+      body.appendChild(blockRow(b));
+      body.appendChild(slidesPanel('block',b.id,b.slide_secs));
+      tabs.forEach(function(t){
+        var ppl=childPeople(t.id);
+        var tmeta=(isU?'Đơn vị':(ppl.length+' người'))+(t.active?'':' · <i>đang ẨN</i>');
+        var tnode=treeNode(2,'t'+t.id,false,(isU?'🏢 Đơn vị':'📁 Hội đồng'),t.name,tmeta,function(tb){
+          tb.appendChild(tabRow(t,isU));
+          tb.appendChild(slidesPanel('tab',t.id,t.slide_secs));
+          if(isU){tb.appendChild(orgVideosPanel('tab',t.id));}
+          else{
+            var grid=document.createElement('div');grid.className='grid';grid.style.gridTemplateColumns='repeat(auto-fill,minmax(240px,1fr))';grid.style.marginTop='10px';
+            ppl.forEach(function(p){grid.appendChild(personCard(p,ppl));});
+            if(!ppl.length){var e=document.createElement('p');e.className='hint';e.textContent='Chưa có thành viên.';tb.appendChild(e);}
+            tb.appendChild(grid);
+            var ap=document.createElement('button');ap.type='button';ap.className='btn btn-sm btn-blue';ap.style.marginTop='10px';ap.textContent='＋ Thêm người';
+            ap.onclick=function(){ins('org_people',{tab_id:t.id,name:'Họ tên',title:'',bio:'',link:'',display_order:nextOrd(childPeople(t.id)),active:true});};
+            tb.appendChild(ap);
+          }
+        });
+        body.appendChild(tnode);
+      });
+      var at=document.createElement('button');at.type='button';at.className='btn btn-sm btn-blue';at.style.margin='10px 0 2px';at.textContent=(isU?'＋ Thêm đơn vị':'＋ Thêm hội đồng');
+      at.onclick=function(){ins('org_tabs',{block_id:b.id,name:(isU?'Đơn vị mới':'Hội đồng mới'),intro:'',display_order:nextOrd(childTabs(b.id)),active:true});};
+      body.appendChild(at);
+    });
+    root.appendChild(bnode);
+  });}
 $('#addBlock').onclick=function(){ins('org_blocks',{title:'Module mới',subtitle:'',display_order:nextOrd(D.blocks),active:true});};
 
-function renderTabs(){var sec=$('#tabSec');if(!cur.block){sec.hidden=true;return;}sec.hidden=false;
-  var b=D.blocks.find(function(x){return x.id===cur.block;});var units=(b&&b.kind==='units');$('#crumbBlock').innerHTML='Module: <b>'+esc(b?b.title:'')+'</b> · loại: <b>'+(units?'Các đơn vị':'Nhân sự')+'</b>';
-  var list=D.tabs.filter(function(t){return t.block_id===cur.block;});var el=$('#tabList');el.innerHTML='';
-  list.forEach(function(t){var d=document.createElement('div');d.className='row2'+(cur.tab===t.id?' sel':'');
-    var contactHtml=units
-      ?('<input class="inp" data-f="address" value="'+esc(t.address||'')+'" placeholder="📍 Địa chỉ đơn vị"><input class="inp" data-f="phone" value="'+esc(t.phone||'')+'" placeholder="☎️ Điện thoại"><input class="inp" data-f="email" value="'+esc(t.email||'')+'" placeholder="✉️ Email"><input class="inp" data-f="link" value="'+esc(t.link||'')+'" placeholder="🌐 Website (link truy cập)">')
-      :('<input class="inp" data-f="link" value="'+esc(t.link||'')+'" placeholder="Link truy cập đích của hội đồng (để trống nếu không có)">');
-    d.innerHTML='<div class="ordbox"><button class="btn btn-sm mini" data-a="up">▲</button><button class="btn btn-sm mini" data-a="down">▼</button></div><div class="grow"><input class="inp" data-f="name" value="'+esc(t.name)+'" placeholder="'+(units?'Tên đơn vị':'Tên hội đồng')+'"><textarea class="inp" data-f="intro" placeholder="'+(units?'Nội dung giới thiệu đơn vị':'Giới thiệu ngắn')+'">'+esc(t.intro)+'</textarea>'+contactHtml+'</div><div class="acts"><button class="btn btn-sm btn-gold" data-a="save">Lưu</button><button class="btn btn-sm '+(cur.tab===t.id?'btn-blue':'mini')+'" data-a="pick">'+(cur.tab===t.id?'Đang chọn':'Chọn')+'</button><button class="btn btn-sm '+(t.active?'mini':'btn-gold')+'" data-a="tg">'+(t.active?'Ẩn':'Hiện')+'</button><button class="btn btn-sm btn-red" data-a="del">Xóa</button></div>';
-    d.querySelector('[data-a=save]').onclick=function(){var o={name:$('[data-f=name]',d).value,intro:$('[data-f=intro]',d).value,link:$('[data-f=link]',d).value};var ad=$('[data-f=address]',d),ph=$('[data-f=phone]',d),em=$('[data-f=email]',d);if(ad)o.address=ad.value;if(ph)o.phone=ph.value;if(em)o.email=em.value;upd('org_tabs',t.id,o);};
-    d.querySelector('[data-a=pick]').onclick=function(){cur.tab=t.id;renderTabs();renderPeople();};
-    d.querySelector('[data-a=tg]').onclick=function(){upd('org_tabs',t.id,{active:!t.active});};
-    d.querySelector('[data-a=del]').onclick=function(){if(confirm('Xóa hội đồng + thành viên?')){if(cur.tab===t.id)cur.tab=null;del('org_tabs',t.id);}};
-    d.querySelector('[data-a=up]').onclick=function(){move('org_tabs',list,t.id,-1);};
-    d.querySelector('[data-a=down]').onclick=function(){move('org_tabs',list,t.id,1);};
-    el.appendChild(d);el.appendChild(slidesPanel('tab',t.id,t.slide_secs));if(units)el.appendChild(orgVideosPanel('tab',t.id));});
-  if(!list.length)el.innerHTML='<p class="hint">Chưa có hội đồng.</p>';}
-$('#addTab').onclick=function(){if(!cur.block)return;ins('org_tabs',{block_id:cur.block,name:'Hội đồng mới',intro:'',display_order:nextOrd(D.tabs.filter(function(t){return t.block_id===cur.block;})),active:true});};
+/* Thu gọn/mở mọi mục .sec khi bấm tiêu đề (áp dụng toàn dashboard) */
+document.addEventListener('click',function(e){var h=e.target.closest?e.target.closest('.sec>.sec-h'):null;
+  if(!h)return;if(e.target.closest('input,select,textarea,button,a'))return;
+  h.parentNode.classList.toggle('collapsed');});
 
-function renderPeople(){var sec=$('#peopleSec');if(!cur.tab){sec.hidden=true;return;}var bk=D.blocks.find(function(x){return x.id===cur.block;});if(bk&&bk.kind==='units'){sec.hidden=true;return;}sec.hidden=false;
-  var t=D.tabs.find(function(x){return x.id===cur.tab;});$('#crumbTab').innerHTML='Hội đồng: <b>'+esc(t?t.name:'')+'</b>';
-  var list=D.people.filter(function(p){return p.tab_id===cur.tab;});var el=$('#peopleList');el.innerHTML='';
-  list.forEach(function(p){var c=document.createElement('div');c.className='pcard'+(p.active?'':' off');
-    c.innerHTML='<div class="ph">'+(p.photo_url?'<img src="'+esc(p.photo_url)+'">':'<div class="noimg">chưa có ảnh</div>')+'<div class="ovl">📷 Bấm hoặc kéo-thả ảnh</div></div><div class="pad"><input class="inp" data-f="name" value="'+esc(p.name)+'" placeholder="Tên (vd: ThS. Phạm Quốc Đông)"><input class="inp" data-f="title" value="'+esc(p.title)+'" placeholder="Chức danh"><textarea class="inp" data-f="bio" placeholder="Giới thiệu cụ thể">'+esc(p.bio)+'</textarea><input class="inp" data-f="link" value="'+esc(p.link)+'" placeholder="Link đích (để trống nếu không có)"><div class="acts"><button class="btn btn-sm btn-gold" data-a="save">Lưu</button><button class="btn btn-sm mini" data-a="up">▲</button><button class="btn btn-sm mini" data-a="down">▼</button><button class="btn btn-sm '+(p.active?'mini':'btn-gold')+'" data-a="tg">'+(p.active?'Ẩn':'Hiện')+'</button><button class="btn btn-sm btn-red" data-a="del">Xóa</button></div></div>';
-    var ph=c.querySelector('.ph');dropzone(ph,false,function(fs){replacePersonPhoto(p,fs[0]);});
-    c.querySelector('[data-a=save]').onclick=function(){upd('org_people',p.id,{name:$('[data-f=name]',c).value,title:$('[data-f=title]',c).value,bio:$('[data-f=bio]',c).value,link:$('[data-f=link]',c).value});};
-    c.querySelector('[data-a=tg]').onclick=function(){upd('org_people',p.id,{active:!p.active});};
-    c.querySelector('[data-a=del]').onclick=function(){if(confirm('Xóa người này?')){if(p.storage_path)sb.storage.from('sotay').remove([p.storage_path]);del('org_people',p.id);}};
-    c.querySelector('[data-a=up]').onclick=function(){move('org_people',list,p.id,-1);};
-    c.querySelector('[data-a=down]').onclick=function(){move('org_people',list,p.id,1);};
-    el.appendChild(c);});
-  if(!list.length)el.innerHTML='<p class="hint">Chưa có thành viên.</p>';}
-$('#addPerson').onclick=function(){if(!cur.tab)return;ins('org_people',{tab_id:cur.tab,name:'Họ tên',title:'',bio:'',link:'',display_order:nextOrd(D.people.filter(function(p){return p.tab_id===cur.tab;})),active:true});};
 async function replacePersonPhoto(p,file){if(!file)return;busy(true);try{var u=await uploadFile(file,'people');if(p.storage_path)await sb.storage.from('sotay').remove([p.storage_path]);var r=await sb.from('org_people').update({photo_url:u.url,storage_path:u.path}).eq('id',p.id);if(r.error)throw r.error;toast('Đã cập nhật ảnh ✓','ok');}catch(e){toast('Lỗi ảnh: '+(e.message||e),'err');}busy(false);}
 
 /* ---- SLIDER ẢNH cho Module/Hội đồng ---- */
