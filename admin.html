@@ -537,40 +537,6 @@ async function addVideoLink(){var url=($('#vidYt').value||'').trim();if(!url){to
   busy(false);if(r.error){toast('Lỗi: '+r.error.message,'err');}else{$('#vidYt').value='';toast('Đã thêm link YouTube ✓','ok');}}
 (function(){var dz=$('#vidDrop');if(dz)dropzoneV(dz,addVideoFiles);var yb=$('#addYt');if(yb)yb.onclick=addVideoLink;})();
 
-/* ============================================================ VIDEO ============================================================ */
-var VIDS=[];
-async function loadVideos(){if(!sb)return;var r=await sb.from('sotay_videos').select('*').order('display_order').order('id');if(r.error){return;}VIDS=(r.data||[]).sort(ord);renderVideos();}
-function ytThumb(u){var m=String(u||'').match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([A-Za-z0-9_-]{6,})/);return m?('https://img.youtube.com/vi/'+m[1]+'/mqdefault.jpg'):'';}
-function renderVideos(){var el=$('#vidList');if(!el)return;el.innerHTML='';
-  if(!VIDS.length){el.innerHTML='<p class="hint">Chưa có video nào. Tải lên hoặc dán link YouTube ở trên.</p>';return;}
-  VIDS.forEach(function(v,idx){var d=document.createElement('div');d.className='row2'+(v.active?'':' ');
-    var isYt=(v.kind==='youtube')||/youtube\.com|youtu\.be/.test(v.video_url||'');
-    var thumb=isYt?ytThumb(v.video_url):'';
-    d.innerHTML='<div class="ordbox"><button class="btn btn-sm mini" data-a="up">▲</button><span style="font-weight:800">'+(idx+1)+'</span><button class="btn btn-sm mini" data-a="down">▼</button></div>'+
-      '<div class="grow">'+
-        (thumb?'<img src="'+esc(thumb)+'" style="width:160px;max-width:40%;border-radius:8px;float:left;margin:0 10px 6px 0">':'<span class="chip" style="float:left;margin:0 10px 6px 0">🎬 File</span>')+
-        '<input class="inp" data-f="title" value="'+esc(v.title)+'" placeholder="Tiêu đề video (không bắt buộc)">'+
-        '<input class="inp" data-f="url" value="'+esc(v.video_url)+'" placeholder="URL video / link YouTube">'+
-        '<span class="hint">'+(isYt?'YouTube':'File tải lên')+' · '+(v.active?'đang hiện':'đang ẩn')+'</span>'+
-      '</div>'+
-      '<div class="acts"><button class="btn btn-sm btn-gold" data-a="save">Lưu</button><button class="btn btn-sm '+(v.active?'mini':'btn-gold')+'" data-a="tg">'+(v.active?'Ẩn':'Hiện')+'</button><button class="btn btn-sm btn-red" data-a="del">Xóa</button></div>';
-    d.querySelector('[data-a=save]').onclick=function(){upd('sotay_videos',v.id,{title:$('[data-f=title]',d).value,video_url:$('[data-f=url]',d).value});};
-    d.querySelector('[data-a=tg]').onclick=function(){upd('sotay_videos',v.id,{active:!v.active});};
-    d.querySelector('[data-a=del]').onclick=function(){if(confirm('Xóa video này?')){if(v.storage_path)sb.storage.from('sotay').remove([v.storage_path]);del('sotay_videos',v.id);}};
-    d.querySelector('[data-a=up]').onclick=function(){move('sotay_videos',VIDS,v.id,-1);};
-    d.querySelector('[data-a=down]').onclick=function(){move('sotay_videos',VIDS,v.id,1);};
-    el.appendChild(d);});
-}
-async function addVideoFiles(files){busy(true);var base=VIDS.length?Math.max.apply(null,VIDS.map(function(x){return x.display_order||0;})):0;
-  try{for(var i=0;i<files.length;i++){var u=await uploadFile(files[i],'videos');
-    await sb.from('sotay_videos').insert({title:'',kind:'file',video_url:u.url,storage_path:u.path,display_order:base+i+1,active:true});}
-    toast('Đã thêm '+files.length+' video ✓','ok');}catch(e){toast('Lỗi: '+(e.message||e),'err');}busy(false);}
-async function addVideoLink(){var url=($('#vidYt').value||'').trim();if(!url){toast('Dán link YouTube trước đã','err');return;}
-  busy(true);var ordv=VIDS.length?Math.max.apply(null,VIDS.map(function(x){return x.display_order||0;}))+1:1;
-  var r=await sb.from('sotay_videos').insert({title:'',kind:'youtube',video_url:url,storage_path:'',display_order:ordv,active:true});
-  busy(false);if(r.error){toast('Lỗi: '+r.error.message,'err');}else{$('#vidYt').value='';toast('Đã thêm link YouTube ✓','ok');}}
-(function(){var dz=$('#vidDrop');if(dz)dropzoneV(dz,addVideoFiles);var yb=$('#addYt');if(yb)yb.onclick=addVideoLink;})();
-
 /* ============================================================ TIN TỨC (editor Quill) ============================================================ */
 var filePickA=$('#filePickA');
 filePickA.addEventListener('change',function(e){var fs=e.target.files;var cb=filePickA._cb;e.target.value='';if(fs&&fs.length&&cb)cb(fs);});
@@ -618,7 +584,8 @@ async function saveNews(){var t=$('#nw-title').value.trim();if(!t){toast('Nhập
   var data={title:t,excerpt:$('#nw-excerpt').value,content:quill?quill.root.innerHTML:'',cover_url:newsCover?newsCover.url:'',cover_path:newsCover?(newsCover.path||''):'',attachments:newsAtts,tags:$('#nw-tags').value,display_order:(+$('#nw-order').value||0),active:$('#nw-active').checked};
   busy(true);var r=curNews?(await sb.from('sotay_news').update(data).eq('id',curNews.id)):(await sb.from('sotay_news').insert(data));busy(false);
   if(r.error){toast('Lỗi lưu: '+r.error.message,'err');}else{toast('Đã lưu bài viết ✓','ok');closeNews();}}
-(function(){var ab=$('#addNews');if(ab)ab.onclick=function(){openNews(null);};
+function bindNewsModal(){
+  var ab=$('#addNews');if(ab)ab.onclick=function(){openNews(null);};
   var x=$('#nw-x');if(x)x.onclick=closeNews;var cc=$('#nw-cancel');if(cc)cc.onclick=closeNews;
   var sv=$('#nw-save');if(sv)sv.onclick=saveNews;
   var cd=$('#nw-coverDz');if(cd)dropzone(cd,false,function(fs){addNewsCover(fs[0]);});
@@ -627,7 +594,8 @@ async function saveNews(){var t=$('#nw-title').value.trim();if(!t){toast('Nhập
     ['dragleave','drop'].forEach(function(ev){ad.addEventListener(ev,function(e){e.preventDefault();e.stopPropagation();ad.classList.remove('drag');});});
     ad.addEventListener('drop',function(e){var fs=e.dataTransfer&&e.dataTransfer.files;if(fs&&fs.length)addNewsAtts(fs);});}
   var m=$('#newsModal');if(m)m.addEventListener('click',function(e){if(e.target===m)closeNews();});
-})();
+}
+if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',bindNewsModal);}else{bindNewsModal();}
 </script>
 
 <div id="newsModal">
