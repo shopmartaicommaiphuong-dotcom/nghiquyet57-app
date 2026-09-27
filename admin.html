@@ -582,8 +582,15 @@ function openNews(n){curNews=n||null;newsAtts=(n&&Array.isArray(n.attachments))?
 function closeNews(){$('#newsModal').classList.remove('open');}
 async function saveNews(){var t=$('#nw-title').value.trim();if(!t){toast('Nhập tiêu đề đã','err');return;}
   var data={title:t,excerpt:$('#nw-excerpt').value,content:quill?quill.root.innerHTML:'',cover_url:newsCover?newsCover.url:'',cover_path:newsCover?(newsCover.path||''):'',attachments:newsAtts,tags:$('#nw-tags').value,display_order:(+$('#nw-order').value||0),active:$('#nw-active').checked};
-  busy(true);var r=curNews?(await sb.from('sotay_news').update(data).eq('id',curNews.id)):(await sb.from('sotay_news').insert(data));busy(false);
-  if(r.error){toast('Lỗi lưu: '+r.error.message,'err');}else{toast('Đã lưu bài viết ✓','ok');closeNews();}}
+  var sv=$('#nw-save');if(sv)sv.disabled=true;
+  busy(true);
+  try{
+    var r=curNews?(await sb.from('sotay_news').update(data).eq('id',curNews.id)):(await sb.from('sotay_news').insert(data));
+    if(r.error){console.error('saveNews error:',r.error);toast('Lỗi lưu: '+r.error.message,'err');}
+    else{toast('Đã lưu bài viết ✓','ok');closeNews();}
+  }catch(e){console.error('saveNews exception:',e);toast('Lỗi lưu: '+(e&&e.message?e.message:e),'err');}
+  finally{busy(false);if(sv)sv.disabled=false;}
+}
 function bindNewsModal(){
   var ab=$('#addNews');if(ab)ab.onclick=function(){openNews(null);};
   var x=$('#nw-x');if(x)x.onclick=closeNews;var cc=$('#nw-cancel');if(cc)cc.onclick=closeNews;
