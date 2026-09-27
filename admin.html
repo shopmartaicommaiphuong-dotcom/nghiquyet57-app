@@ -223,6 +223,7 @@ textarea.inp{resize:vertical;min-height:60px;line-height:1.45}
 <div class="busy" id="busy"><div class="spin"></div></div>
 <div class="toast" id="toast"></div>
 <input type="file" id="filePick" accept="image/*" hidden>
+<input type="file" id="filePickQ" accept="image/*" multiple hidden>
 <input type="file" id="filePickV" accept="video/*" hidden>
 <input type="file" id="filePickA" hidden>
 
@@ -267,6 +268,8 @@ async function uploadFile(file,folder){
 var filePick=$('#filePick');
 filePick.addEventListener('change',function(e){var fs=e.target.files;var cb=filePick._cb;e.target.value='';if(fs&&fs.length&&cb)cb(fs);});
 function pickFiles(multiple,cb){filePick.multiple=!!multiple;filePick._cb=cb;filePick.click();}
+var filePickQ=$('#filePickQ');
+filePickQ.addEventListener('change',function(e){var fs=e.target.files;e.target.value='';if(fs&&fs.length)insertEditorImages(fs);});
 function dropzone(el,multiple,cb){
   el.addEventListener('click',function(){pickFiles(multiple,cb);});
   ['dragenter','dragover'].forEach(function(ev){el.addEventListener(ev,function(e){e.preventDefault();e.stopPropagation();el.classList.add('drag');});});
@@ -562,7 +565,7 @@ function renderNews(){var el=$('#newsList');if(!el)return;el.innerHTML='';
 function ensureQuill(){if(quill)return quill;
   quill=new Quill('#newsEditor',{theme:'snow',placeholder:'Soạn nội dung — cỡ chữ, in đậm, màu sắc, danh sách, chèn ảnh & video, tạo link...',
     modules:{toolbar:{container:[[{'header':[1,2,3,false]}],[{'size':['small',false,'large','huge']}],['bold','italic','underline','strike'],[{'color':[]},{'background':[]}],[{'list':'ordered'},{'list':'bullet'}],[{'align':[]}],[{'indent':'-1'},{'indent':'+1'}],['blockquote','code-block'],['link','image','video'],['clean']],
-      handlers:{image:function(){pickFiles(true,function(fs){for(var i=0;i<fs.length;i++)insertEditorImage(fs[i]);});}}}}});
+      handlers:{image:function(){filePickQ.click();}}}}});
   var root=quill.root;
   root.addEventListener('drop',function(e){var fs=e.dataTransfer&&e.dataTransfer.files;if(fs&&fs.length){var imgs=[];for(var i=0;i<fs.length;i++)if(/^image\//.test(fs[i].type))imgs.push(fs[i]);if(imgs.length){e.preventDefault();e.stopPropagation();imgs.forEach(insertEditorImage);}}},true);
   root.addEventListener('paste',function(e){var items=e.clipboardData&&e.clipboardData.items;if(!items)return;for(var i=0;i<items.length;i++){if(items[i].type&&items[i].type.indexOf('image')===0){var fl=items[i].getAsFile();if(fl){e.preventDefault();insertEditorImage(fl);}}}});
@@ -576,7 +579,8 @@ function ensureQuill(){if(quill)return quill;
     }
   });
   return quill;}
-async function insertEditorImage(file){if(!file)return;busy(true);try{var u=await uploadFile(file,'news');var q=ensureQuill();var range=q.getSelection(true)||{index:q.getLength()};q.insertEmbed(range.index,'image',u.url,'user');q.setSelection(range.index+1);}catch(e){toast('Lỗi ảnh: '+(e.message||e),'err');}busy(false);}
+async function insertEditorImage(file){if(!file)return;busy(true);try{var u=await uploadFile(file,'news');var q=ensureQuill();var range=q.getSelection(true)||{index:q.getLength()};q.insertEmbed(range.index,'image',u.url,'user');q.setSelection(range.index+1);}catch(e){console.error('insertEditorImage error:',e);toast('Lỗi ảnh: '+(e&&e.message?e.message:e),'err');}busy(false);}
+async function insertEditorImages(fs){for(var i=0;i<fs.length;i++){await insertEditorImage(fs[i]);}}
 function attKind(file){var t=(file.type||'');if(t.indexOf('image')===0)return 'image';if(t.indexOf('video')===0)return 'video';return 'file';}
 function renderNewsCover(){var c=$('#nw-coverPrev');if(!newsCover){c.innerHTML='';return;}c.innerHTML='<img src="'+esc(newsCover.url)+'" style="width:220px;aspect-ratio:16/9;object-fit:cover;border-radius:10px"><button class="btn btn-sm btn-red" type="button" id="nw-coverDel">Xóa ảnh</button>';$('#nw-coverDel').onclick=function(){newsCover=null;renderNewsCover();};}
 function renderNewsAtts(){var c=$('#nw-attList');if(!newsAtts.length){c.innerHTML='<span class="hint">Chưa có đính kèm.</span>';return;}
