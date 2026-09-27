@@ -164,6 +164,7 @@ textarea.inp{resize:vertical;min-height:60px;line-height:1.45}
       <button data-p="profile">📄 Hồ sơ năng lực</button>
       <button data-p="video">🎬 Video</button>
       <button data-p="news">📰 Tin tức</button>
+      <button data-p="doc">📘 Sổ tay PDF</button>
     </div>
 
     <div id="p-img"></div>
@@ -217,6 +218,15 @@ textarea.inp{resize:vertical;min-height:60px;line-height:1.45}
         <div id="newsList" style="margin-top:12px"></div>
       </div>
     </div>
+
+    <div id="p-doc" hidden>
+      <div class="sec">
+        <div class="sec-h"><div class="ic i-poster">📘</div><h3>Sổ Tay Thực Thi Nghị Quyết 57 — nút tải ở trang chủ</h3></div>
+        <p class="desc">Tải lên file (PDF/Word...) để hiện nút <b>"Sổ Tay Thực Thi Nghị Quyết 57"</b> ngay dưới dòng "Người dân là trung tâm" ở trang chủ. Trang chủ chỉ lấy file đang <b>Kích hoạt</b> có Thứ tự nhỏ nhất. Đồng bộ <b>realtime</b> — thêm/xóa/đổi là trang chủ cập nhật ngay, không cần sửa code.</p>
+        <div class="dz addcard" id="docDrop"><div><div class="plus">＋</div>Tải file lên — bấm hoặc kéo-thả<br>(PDF, Word, Excel... · có thể chọn nhiều file)</div></div>
+        <div id="docList" style="margin-top:12px"></div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -251,11 +261,11 @@ async function boot(){var s=(await sb.auth.getSession()).data.session;if(s)showA
 $('#loginForm').addEventListener('submit',async function(e){e.preventDefault();$('#loginMsg').textContent='Đang đăng nhập…';var r=await sb.auth.signInWithPassword({email:$('#email').value.trim(),password:$('#pass').value});if(r.error){$('#loginMsg').className='msg err';$('#loginMsg').textContent='Sai email/mật khẩu. '+r.error.message;}});
 $('#logout').addEventListener('click',function(){sb.auth.signOut();});
 function showLogin(){$('#loginView').hidden=false;$('#appView').hidden=true;}
-function showApp(s){$('#loginView').hidden=true;$('#appView').hidden=false;$('#whoami').textContent='Đã đăng nhập: '+(s.user&&s.user.email||'admin')+' · realtime';loadImages();loadOrg();loadVideos();loadNews();subscribe();}
+function showApp(s){$('#loginView').hidden=true;$('#appView').hidden=false;$('#whoami').textContent='Đã đăng nhập: '+(s.user&&s.user.email||'admin')+' · realtime';loadImages();loadOrg();loadVideos();loadNews();loadDocs();subscribe();}
 
 document.querySelectorAll('.tabbar button').forEach(function(b){b.onclick=function(){
   document.querySelectorAll('.tabbar button').forEach(function(x){x.classList.remove('on');});b.classList.add('on');
-  ['img','lead','portal','profile','video','news'].forEach(function(p){$('#p-'+p).hidden=(p!==b.getAttribute('data-p'));});};});
+  ['img','lead','portal','profile','video','news','doc'].forEach(function(p){$('#p-'+p).hidden=(p!==b.getAttribute('data-p'));});};});
 
 /* ===== UPLOAD + DROPZONE dùng chung ===== */
 async function uploadFile(file,folder){
@@ -293,6 +303,7 @@ function subscribe(){if(chan)return;chan=sb.channel('admin-all');
   chan.on('postgres_changes',{event:'*',schema:'public',table:'sotay_images'},loadImages);
   chan.on('postgres_changes',{event:'*',schema:'public',table:'sotay_videos'},loadVideos);
   chan.on('postgres_changes',{event:'*',schema:'public',table:'sotay_news'},loadNews);
+  chan.on('postgres_changes',{event:'*',schema:'public',table:'sotay_docs'},loadDocs);
   ['org_blocks','org_tabs','org_people','org_links','org_profile','org_slides','org_videos'].forEach(function(t){chan.on('postgres_changes',{event:'*',schema:'public',table:t},loadOrg);});
   chan.subscribe();}
 
@@ -541,6 +552,41 @@ async function addVideoLink(){var url=($('#vidYt').value||'').trim();if(!url){to
   var r=await sb.from('sotay_videos').insert({title:'',kind:'youtube',video_url:url,storage_path:'',display_order:ordv,active:true});
   busy(false);if(r.error){toast('Lỗi: '+r.error.message,'err');}else{$('#vidYt').value='';toast('Đã thêm link YouTube ✓','ok');}}
 (function(){var dz=$('#vidDrop');if(dz)dropzoneV(dz,addVideoFiles);var yb=$('#addYt');if(yb)yb.onclick=addVideoLink;})();
+
+/* ============================================================ SỔ TAY PDF (file tải về ở trang chủ) ============================================================ */
+var DOCS=[];
+async function loadDocs(){if(!sb)return;var r=await sb.from('sotay_docs').select('*').order('display_order').order('id',{ascending:false});if(r.error){return;}DOCS=(r.data||[]).sort(ord);renderDocs();}
+function fileIcon(name){var e=(String(name||'').split('.').pop()||'').toLowerCase();if(e==='pdf')return '📕';if(['doc','docx'].indexOf(e)>=0)return '📄';if(['xls','xlsx'].indexOf(e)>=0)return '📊';if(['ppt','pptx'].indexOf(e)>=0)return '📽️';return '📘';}
+function renderDocs(){var el=$('#docList');if(!el)return;el.innerHTML='';
+  if(!DOCS.length){el.innerHTML='<p class="hint">Chưa có file nào. Tải lên ở trên — file đầu tiên (Kích hoạt + Thứ tự nhỏ nhất) sẽ hiện nút tải ở trang chủ.</p>';return;}
+  DOCS.forEach(function(n,idx){var d=document.createElement('div');d.className='row2'+(idx===0&&n.active?' sel':'');
+    d.innerHTML='<div class="ordbox"><button class="btn btn-sm mini" data-a="up">▲</button><span style="font-weight:800">'+(idx+1)+'</span><button class="btn btn-sm mini" data-a="down">▼</button></div>'+
+      '<div class="chip" style="flex:none;font-size:1.7rem;line-height:1;padding:8px 12px">'+fileIcon(n.file_name)+'</div>'+
+      '<div class="grow">'+
+        '<input class="inp" data-f="title" value="'+esc(n.title)+'" placeholder="Tên hiển thị trên nút (VD: Sổ Tay Thực Thi Nghị Quyết 57)">'+
+        '<span class="hint">'+esc(n.file_name||'')+' · '+(n.active?'đang kích hoạt':'đang tắt')+(idx===0&&n.active?' · <b>đang hiện ở trang chủ</b>':'')+' · <a href="'+esc(n.file_url)+'" target="_blank" rel="noopener">Xem file ↗</a></span>'+
+      '</div>'+
+      '<div class="acts"><button class="btn btn-sm btn-blue" data-a="rep">Thay file</button><button class="btn btn-sm btn-gold" data-a="save">Lưu tên</button><button class="btn btn-sm '+(n.active?'mini':'btn-gold')+'" data-a="tg">'+(n.active?'Tắt':'Kích hoạt')+'</button><button class="btn btn-sm btn-red" data-a="del">Xóa</button></div>';
+    d.querySelector('[data-a=save]').onclick=function(){upd('sotay_docs',n.id,{title:$('[data-f=title]',d).value});};
+    d.querySelector('[data-a=tg]').onclick=function(){upd('sotay_docs',n.id,{active:!n.active});};
+    d.querySelector('[data-a=del]').onclick=function(){if(confirm('Xóa file này?')){if(n.file_path)sb.storage.from('sotay').remove([n.file_path]);del('sotay_docs',n.id);}};
+    d.querySelector('[data-a=up]').onclick=function(){move('sotay_docs',DOCS,n.id,-1);};
+    d.querySelector('[data-a=down]').onclick=function(){move('sotay_docs',DOCS,n.id,1);};
+    d.querySelector('[data-a=rep]').onclick=function(){pickAny(false,function(fs){replaceDoc(n,fs[0]);});};
+    el.appendChild(d);});
+}
+async function addDocFiles(files){busy(true);var base=DOCS.length?Math.max.apply(null,DOCS.map(function(x){return x.display_order||0;})):0;
+  try{for(var i=0;i<files.length;i++){var u=await uploadFile(files[i],'docs');
+    await sb.from('sotay_docs').insert({title:files[i].name.replace(/\.[^.]+$/,''),file_name:files[i].name,file_url:u.url,file_path:u.path,display_order:base+i+1,active:true});}
+    toast('Đã thêm '+files.length+' file ✓','ok');}catch(e){toast('Lỗi: '+(e.message||e),'err');}busy(false);}
+async function replaceDoc(n,file){if(!file)return;busy(true);try{var u=await uploadFile(file,'docs');if(n.file_path)await sb.storage.from('sotay').remove([n.file_path]);
+  var r=await sb.from('sotay_docs').update({file_url:u.url,file_path:u.path,file_name:file.name}).eq('id',n.id);if(r.error)throw r.error;toast('Đã thay file ✓','ok');}catch(e){toast('Lỗi: '+(e.message||e),'err');}busy(false);}
+(function(){var dz=$('#docDrop');if(!dz)return;
+  dz.addEventListener('click',function(){pickAny(true,addDocFiles);});
+  ['dragenter','dragover'].forEach(function(ev){dz.addEventListener(ev,function(e){e.preventDefault();e.stopPropagation();dz.classList.add('drag');});});
+  ['dragleave','drop'].forEach(function(ev){dz.addEventListener(ev,function(e){e.preventDefault();e.stopPropagation();dz.classList.remove('drag');});});
+  dz.addEventListener('drop',function(e){var fs=e.dataTransfer&&e.dataTransfer.files;if(fs&&fs.length)addDocFiles(fs);});
+})();
 
 /* ============================================================ TIN TỨC (editor Quill) ============================================================ */
 var filePickA=$('#filePickA');
