@@ -121,6 +121,8 @@ textarea.inp{resize:vertical;min-height:60px;line-height:1.45}
 #nw-editWrap{border:1px solid var(--line);border-radius:10px;overflow:hidden}
 #newsEditor .ql-editor{min-height:240px;font-family:inherit;font-size:14.5px}
 .ql-snow .ql-editor img{max-width:100%}
+.ql-editor img{cursor:pointer;min-height:36px;min-width:36px;outline:2px dashed transparent;outline-offset:2px;transition:outline-color .15s}
+.ql-editor img:hover{outline-color:#ef4444}
 .attgrid{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}
 .attx{position:relative;width:112px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#f8fafd;padding:6px;text-align:center}
 .attx img{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:6px;display:block}
@@ -564,6 +566,15 @@ function ensureQuill(){if(quill)return quill;
   var root=quill.root;
   root.addEventListener('drop',function(e){var fs=e.dataTransfer&&e.dataTransfer.files;if(fs&&fs.length){var imgs=[];for(var i=0;i<fs.length;i++)if(/^image\//.test(fs[i].type))imgs.push(fs[i]);if(imgs.length){e.preventDefault();e.stopPropagation();imgs.forEach(insertEditorImage);}}},true);
   root.addEventListener('paste',function(e){var items=e.clipboardData&&e.clipboardData.items;if(!items)return;for(var i=0;i<items.length;i++){if(items[i].type&&items[i].type.indexOf('image')===0){var fl=items[i].getAsFile();if(fl){e.preventDefault();insertEditorImage(fl);}}}});
+  root.addEventListener('click',function(e){
+    if(e.target&&e.target.tagName==='IMG'){
+      if(confirm('Xóa ảnh này khỏi bài viết?')){
+        var blot=Quill.find(e.target);
+        if(blot){var idx=quill.getIndex(blot);quill.deleteText(idx,1,'user');}
+        else{e.target.remove();}
+      }
+    }
+  });
   return quill;}
 async function insertEditorImage(file){if(!file)return;busy(true);try{var u=await uploadFile(file,'news');var q=ensureQuill();var range=q.getSelection(true)||{index:q.getLength()};q.insertEmbed(range.index,'image',u.url,'user');q.setSelection(range.index+1);}catch(e){toast('Lỗi ảnh: '+(e.message||e),'err');}busy(false);}
 function attKind(file){var t=(file.type||'');if(t.indexOf('image')===0)return 'image';if(t.indexOf('video')===0)return 'video';return 'file';}
