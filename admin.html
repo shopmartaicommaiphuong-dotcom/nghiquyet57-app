@@ -165,6 +165,7 @@ textarea.inp{resize:vertical;min-height:60px;line-height:1.45}
       <button data-p="video">🎬 Video</button>
       <button data-p="news">📰 Tin tức</button>
       <button data-p="doc">📘 Sổ tay PDF</button>
+      <button data-p="refs">📑 Tài liệu tham chiếu</button>
     </div>
 
     <div id="p-img"></div>
@@ -227,6 +228,21 @@ textarea.inp{resize:vertical;min-height:60px;line-height:1.45}
         <div id="docList" style="margin-top:12px"></div>
       </div>
     </div>
+
+    <div id="p-refs" hidden>
+      <div class="sec">
+        <div class="sec-h"><div class="ic i-vt">📑</div><h3>Tài liệu tham chiếu — nút "Tài liệu tham chiếu" ở trang chủ</h3></div>
+        <p class="desc">Thêm nhiều file (PDF/Word/Excel...) <b>hoặc</b> dán link sẵn có (Google Drive, PDF online...). Trang chủ hiện danh sách các mục đang <b>Kích hoạt</b>, bấm vào dòng hoặc nút tải ⬇ đều tải được. Đồng bộ <b>realtime</b>.</p>
+        <div class="dz addcard" id="refDrop"><div><div class="plus">＋</div>Tải file lên — bấm hoặc kéo-thả<br>(có thể chọn nhiều file cùng lúc)</div></div>
+        <div class="acts" style="gap:8px;margin:12px 0 6px;flex-wrap:wrap">
+          <input class="inp" id="refLinkTitle" placeholder="Tên hiển thị (VD: Thông tư hướng dẫn thi hành...)" style="flex:1;min-width:200px">
+          <input class="inp" id="refLinkUrl" placeholder="Dán link file (Google Drive, PDF online...)" style="flex:1;min-width:240px">
+          <button class="btn btn-sm btn-blue" id="addRefLink">＋ Thêm link</button>
+        </div>
+        <p class="hint" style="margin:0 0 10px">Mẹo: link Google Drive cần để chế độ chia sẻ "Bất kỳ ai có đường liên kết".</p>
+        <div id="refList"></div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -261,11 +277,11 @@ async function boot(){var s=(await sb.auth.getSession()).data.session;if(s)showA
 $('#loginForm').addEventListener('submit',async function(e){e.preventDefault();$('#loginMsg').textContent='Đang đăng nhập…';var r=await sb.auth.signInWithPassword({email:$('#email').value.trim(),password:$('#pass').value});if(r.error){$('#loginMsg').className='msg err';$('#loginMsg').textContent='Sai email/mật khẩu. '+r.error.message;}});
 $('#logout').addEventListener('click',function(){sb.auth.signOut();});
 function showLogin(){$('#loginView').hidden=false;$('#appView').hidden=true;}
-function showApp(s){$('#loginView').hidden=true;$('#appView').hidden=false;$('#whoami').textContent='Đã đăng nhập: '+(s.user&&s.user.email||'admin')+' · realtime';loadImages();loadOrg();loadVideos();loadNews();loadDocs();subscribe();}
+function showApp(s){$('#loginView').hidden=true;$('#appView').hidden=false;$('#whoami').textContent='Đã đăng nhập: '+(s.user&&s.user.email||'admin')+' · realtime';loadImages();loadOrg();loadVideos();loadNews();loadDocs();loadRefs();subscribe();}
 
 document.querySelectorAll('.tabbar button').forEach(function(b){b.onclick=function(){
   document.querySelectorAll('.tabbar button').forEach(function(x){x.classList.remove('on');});b.classList.add('on');
-  ['img','lead','portal','profile','video','news','doc'].forEach(function(p){$('#p-'+p).hidden=(p!==b.getAttribute('data-p'));});};});
+  ['img','lead','portal','profile','video','news','doc','refs'].forEach(function(p){$('#p-'+p).hidden=(p!==b.getAttribute('data-p'));});};});
 
 /* ===== UPLOAD + DROPZONE dùng chung ===== */
 async function uploadFile(file,folder){
@@ -304,6 +320,7 @@ function subscribe(){if(chan)return;chan=sb.channel('admin-all');
   chan.on('postgres_changes',{event:'*',schema:'public',table:'sotay_videos'},loadVideos);
   chan.on('postgres_changes',{event:'*',schema:'public',table:'sotay_news'},loadNews);
   chan.on('postgres_changes',{event:'*',schema:'public',table:'sotay_docs'},loadDocs);
+  chan.on('postgres_changes',{event:'*',schema:'public',table:'sotay_refs'},loadRefs);
   ['org_blocks','org_tabs','org_people','org_links','org_profile','org_slides','org_videos'].forEach(function(t){chan.on('postgres_changes',{event:'*',schema:'public',table:t},loadOrg);});
   chan.subscribe();}
 
@@ -586,6 +603,48 @@ async function replaceDoc(n,file){if(!file)return;busy(true);try{var u=await upl
   ['dragenter','dragover'].forEach(function(ev){dz.addEventListener(ev,function(e){e.preventDefault();e.stopPropagation();dz.classList.add('drag');});});
   ['dragleave','drop'].forEach(function(ev){dz.addEventListener(ev,function(e){e.preventDefault();e.stopPropagation();dz.classList.remove('drag');});});
   dz.addEventListener('drop',function(e){var fs=e.dataTransfer&&e.dataTransfer.files;if(fs&&fs.length)addDocFiles(fs);});
+})();
+
+/* ============================================================ TÀI LIỆU THAM CHIẾU (nhiều file + link, nút "Tài liệu tham chiếu" ở trang chủ) ============================================================ */
+var REFS=[];
+async function loadRefs(){if(!sb)return;var r=await sb.from('sotay_refs').select('*').order('display_order').order('id',{ascending:false});if(r.error){return;}REFS=(r.data||[]).sort(ord);renderRefs();}
+function renderRefs(){var el=$('#refList');if(!el)return;el.innerHTML='';
+  if(!REFS.length){el.innerHTML='<p class="hint">Chưa có tài liệu nào. Tải file lên hoặc dán link ở trên.</p>';return;}
+  REFS.forEach(function(n,idx){var d=document.createElement('div');d.className='row2';
+    var isLink=(n.source==='link');
+    d.innerHTML='<div class="ordbox"><button class="btn btn-sm mini" data-a="up">▲</button><span style="font-weight:800">'+(idx+1)+'</span><button class="btn btn-sm mini" data-a="down">▼</button></div>'+
+      '<div class="chip" style="flex:none;font-size:1.6rem;line-height:1;padding:8px 12px">'+(isLink?'🔗':fileIcon(n.file_name))+'</div>'+
+      '<div class="grow">'+
+        '<input class="inp" data-f="title" value="'+esc(n.title)+'" placeholder="Tên hiển thị">'+
+        '<span class="hint">'+(isLink?'🔗 Link ngoài':'📤 File tải lên')+' · '+esc(n.file_name||n.file_url||'')+' · '+(n.active?'đang hiện':'đang ẩn')+' · <a href="'+esc(n.file_url)+'" target="_blank" rel="noopener">Xem ↗</a></span>'+
+      '</div>'+
+      '<div class="acts"><button class="btn btn-sm btn-blue" data-a="rep">Thay file</button><button class="btn btn-sm btn-gold" data-a="save">Lưu tên</button><button class="btn btn-sm '+(n.active?'mini':'btn-gold')+'" data-a="tg">'+(n.active?'Ẩn':'Hiện')+'</button><button class="btn btn-sm btn-red" data-a="del">Xóa</button></div>';
+    d.querySelector('[data-a=save]').onclick=function(){upd('sotay_refs',n.id,{title:$('[data-f=title]',d).value});};
+    d.querySelector('[data-a=tg]').onclick=function(){upd('sotay_refs',n.id,{active:!n.active});};
+    d.querySelector('[data-a=del]').onclick=function(){if(confirm('Xóa tài liệu này?')){if(n.source==='upload'&&n.file_path)sb.storage.from('sotay').remove([n.file_path]);del('sotay_refs',n.id);}};
+    d.querySelector('[data-a=up]').onclick=function(){move('sotay_refs',REFS,n.id,-1);};
+    d.querySelector('[data-a=down]').onclick=function(){move('sotay_refs',REFS,n.id,1);};
+    d.querySelector('[data-a=rep]').onclick=function(){pickAny(false,function(fs){replaceRef(n,fs[0]);});};
+    el.appendChild(d);});
+}
+async function addRefFiles(files){busy(true);var base=REFS.length?Math.max.apply(null,REFS.map(function(x){return x.display_order||0;})):0;
+  try{for(var i=0;i<files.length;i++){var u=await uploadFile(files[i],'refs');
+    await sb.from('sotay_refs').insert({title:files[i].name.replace(/\.[^.]+$/,''),file_name:files[i].name,file_url:u.url,file_path:u.path,source:'upload',display_order:base+i+1,active:true});}
+    toast('Đã thêm '+files.length+' tài liệu ✓','ok');}catch(e){toast('Lỗi: '+(e.message||e),'err');}busy(false);}
+async function addRefLink(){var t=($('#refLinkTitle').value||'').trim();var u=($('#refLinkUrl').value||'').trim();
+  if(!u){toast('Dán link trước đã','err');return;}
+  busy(true);var ordv=REFS.length?Math.max.apply(null,REFS.map(function(x){return x.display_order||0;}))+1:1;
+  var fname='';try{fname=decodeURIComponent((u.split('/').pop()||'').split('?')[0]);}catch(e){fname=(u.split('/').pop()||'').split('?')[0];}
+  var r=await sb.from('sotay_refs').insert({title:t||fname||'Tài liệu',file_name:fname,file_url:u,file_path:'',source:'link',display_order:ordv,active:true});
+  busy(false);if(r.error){toast('Lỗi: '+r.error.message,'err');}else{$('#refLinkTitle').value='';$('#refLinkUrl').value='';toast('Đã thêm link ✓','ok');}}
+async function replaceRef(n,file){if(!file)return;busy(true);try{var u=await uploadFile(file,'refs');if(n.source==='upload'&&n.file_path)await sb.storage.from('sotay').remove([n.file_path]);
+  var r=await sb.from('sotay_refs').update({file_url:u.url,file_path:u.path,file_name:file.name,source:'upload'}).eq('id',n.id);if(r.error)throw r.error;toast('Đã thay file ✓','ok');}catch(e){toast('Lỗi: '+(e.message||e),'err');}busy(false);}
+(function(){var dz=$('#refDrop');if(!dz)return;
+  dz.addEventListener('click',function(){pickAny(true,addRefFiles);});
+  ['dragenter','dragover'].forEach(function(ev){dz.addEventListener(ev,function(e){e.preventDefault();e.stopPropagation();dz.classList.add('drag');});});
+  ['dragleave','drop'].forEach(function(ev){dz.addEventListener(ev,function(e){e.preventDefault();e.stopPropagation();dz.classList.remove('drag');});});
+  dz.addEventListener('drop',function(e){var fs=e.dataTransfer&&e.dataTransfer.files;if(fs&&fs.length)addRefFiles(fs);});
+  var ab=$('#addRefLink');if(ab)ab.onclick=addRefLink;
 })();
 
 /* ============================================================ TIN TỨC (editor Quill) ============================================================ */
