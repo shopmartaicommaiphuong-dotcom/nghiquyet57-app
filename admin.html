@@ -166,6 +166,7 @@ textarea.inp{resize:vertical;min-height:60px;line-height:1.45}
       <button data-p="news">📰 Tin tức</button>
       <button data-p="doc">📘 Sổ tay PDF</button>
       <button data-p="refs">📑 Tài liệu tham chiếu</button>
+      <button data-p="nqv">🎞️ Video Nghị Quyết 57</button>
     </div>
 
     <div id="p-img"></div>
@@ -229,6 +230,21 @@ textarea.inp{resize:vertical;min-height:60px;line-height:1.45}
       </div>
     </div>
 
+    <div id="p-nqv" hidden>
+      <div class="sec">
+        <div class="sec-h"><div class="ic i-hero">🎞️</div><h3>Video Nghị Quyết 57 — nút "Video Nghị Quyết 57" ở trang chủ</h3></div>
+        <p class="desc">Tải <b>nhiều file video</b> lên (MP4, MOV...) <b>hoặc</b> dán <b>link YouTube</b>. Trang chủ hiện danh sách các video đang <b>Hiện</b>: video tải lên bấm vào dòng hoặc nút ⬇ là <b>tải về</b>; video YouTube bấm vào sẽ mở xem trên YouTube. Đồng bộ <b>realtime</b> — thêm/xóa/sửa là trang chủ đổi ngay.</p>
+        <div class="dz addcard" id="nqvDrop"><div><div class="plus">＋</div>Tải video lên — bấm hoặc kéo-thả<br>(có thể chọn nhiều video cùng lúc)</div></div>
+        <div class="acts" style="gap:8px;margin:12px 0 6px;flex-wrap:wrap">
+          <input class="inp" id="nqvLinkTitle" placeholder="Tên hiển thị (VD: Toàn văn Nghị quyết 57 — phần 1)" style="flex:1;min-width:200px">
+          <input class="inp" id="nqvLinkUrl" placeholder="Dán link YouTube (https://youtu.be/... hoặc youtube.com/watch?v=...)" style="flex:1;min-width:240px">
+          <button class="btn btn-sm btn-blue" id="addNqvLink">＋ Thêm link YouTube</button>
+        </div>
+        <p class="hint" style="margin:0 0 10px">Lưu ý: YouTube không cho tải trực tiếp video của kênh khác, nên video dán link chỉ mở xem trên YouTube. Muốn người xem tải về được thì hãy <b>tải file lên</b> (mỗi file tối đa theo giới hạn Supabase, gói Free ≈ 50 MB).</p>
+        <div id="nqvList"></div>
+      </div>
+    </div>
+
     <div id="p-refs" hidden>
       <div class="sec">
         <div class="sec-h"><div class="ic i-vt">📑</div><h3>Tài liệu tham chiếu — nút "Tài liệu tham chiếu" ở trang chủ</h3></div>
@@ -277,11 +293,11 @@ async function boot(){var s=(await sb.auth.getSession()).data.session;if(s)showA
 $('#loginForm').addEventListener('submit',async function(e){e.preventDefault();$('#loginMsg').textContent='Đang đăng nhập…';var r=await sb.auth.signInWithPassword({email:$('#email').value.trim(),password:$('#pass').value});if(r.error){$('#loginMsg').className='msg err';$('#loginMsg').textContent='Sai email/mật khẩu. '+r.error.message;}});
 $('#logout').addEventListener('click',function(){sb.auth.signOut();});
 function showLogin(){$('#loginView').hidden=false;$('#appView').hidden=true;}
-function showApp(s){$('#loginView').hidden=true;$('#appView').hidden=false;$('#whoami').textContent='Đã đăng nhập: '+(s.user&&s.user.email||'admin')+' · realtime';loadImages();loadOrg();loadVideos();loadNews();loadDocs();loadRefs();subscribe();}
+function showApp(s){$('#loginView').hidden=true;$('#appView').hidden=false;$('#whoami').textContent='Đã đăng nhập: '+(s.user&&s.user.email||'admin')+' · realtime';loadImages();loadOrg();loadVideos();loadNews();loadDocs();loadRefs();loadNqv();subscribe();}
 
 document.querySelectorAll('.tabbar button').forEach(function(b){b.onclick=function(){
   document.querySelectorAll('.tabbar button').forEach(function(x){x.classList.remove('on');});b.classList.add('on');
-  ['img','lead','portal','profile','video','news','doc','refs'].forEach(function(p){$('#p-'+p).hidden=(p!==b.getAttribute('data-p'));});};});
+  ['img','lead','portal','profile','video','news','doc','refs','nqv'].forEach(function(p){$('#p-'+p).hidden=(p!==b.getAttribute('data-p'));});};});
 
 /* ===== UPLOAD + DROPZONE dùng chung ===== */
 async function uploadFile(file,folder){
@@ -321,6 +337,7 @@ function subscribe(){if(chan)return;chan=sb.channel('admin-all');
   chan.on('postgres_changes',{event:'*',schema:'public',table:'sotay_news'},loadNews);
   chan.on('postgres_changes',{event:'*',schema:'public',table:'sotay_docs'},loadDocs);
   chan.on('postgres_changes',{event:'*',schema:'public',table:'sotay_refs'},loadRefs);
+  chan.on('postgres_changes',{event:'*',schema:'public',table:'sotay_nqvideos'},loadNqv);
   ['org_blocks','org_tabs','org_people','org_links','org_profile','org_slides','org_videos'].forEach(function(t){chan.on('postgres_changes',{event:'*',schema:'public',table:t},loadOrg);});
   chan.subscribe();}
 
@@ -645,6 +662,53 @@ async function replaceRef(n,file){if(!file)return;busy(true);try{var u=await upl
   ['dragleave','drop'].forEach(function(ev){dz.addEventListener(ev,function(e){e.preventDefault();e.stopPropagation();dz.classList.remove('drag');});});
   dz.addEventListener('drop',function(e){var fs=e.dataTransfer&&e.dataTransfer.files;if(fs&&fs.length)addRefFiles(fs);});
   var ab=$('#addRefLink');if(ab)ab.onclick=addRefLink;
+})();
+
+/* ============================================================ VIDEO NGHỊ QUYẾT 57 (nhiều file + link YouTube, nút "Video Nghị Quyết 57" ở trang chủ) ============================================================ */
+var NQV=[];
+async function loadNqv(){if(!sb)return;var r=await sb.from('sotay_nqvideos').select('*').order('display_order').order('id',{ascending:false});if(r.error){toast('Lỗi tải Video NQ57: '+r.error.message,'err');return;}NQV=(r.data||[]).sort(ord);renderNqv();}
+function renderNqv(){var el=$('#nqvList');if(!el)return;el.innerHTML='';
+  if(!NQV.length){el.innerHTML='<p class="hint">Chưa có video nào. Tải file lên hoặc dán link YouTube ở trên.</p>';return;}
+  NQV.forEach(function(n,idx){var d=document.createElement('div');d.className='row2';
+    var yt=(n.source==='youtube');
+    d.innerHTML='<div class="ordbox"><button class="btn btn-sm mini" data-a="up">▲</button><span style="font-weight:800">'+(idx+1)+'</span><button class="btn btn-sm mini" data-a="down">▼</button></div>'+
+      '<div class="chip" style="flex:none;font-size:1.6rem;line-height:1;padding:8px 12px">'+(yt?'▶️':'🎬')+'</div>'+
+      '<div class="grow">'+
+        '<input class="inp" data-f="title" value="'+esc(n.title)+'" placeholder="Tên hiển thị">'+
+        '<span class="hint">'+(yt?'▶️ Link YouTube':'📤 Video tải lên')+' · '+esc(n.file_name||n.file_url||'')+' · '+(n.active?'đang hiện':'đang ẩn')+' · <a href="'+esc(n.file_url)+'" target="_blank" rel="noopener">Xem ↗</a></span>'+
+      '</div>'+
+      '<div class="acts">'+(yt?'':'<button class="btn btn-sm btn-blue" data-a="rep">Thay video</button>')+'<button class="btn btn-sm btn-gold" data-a="save">Lưu tên</button><button class="btn btn-sm '+(n.active?'mini':'btn-gold')+'" data-a="tg">'+(n.active?'Ẩn':'Hiện')+'</button><button class="btn btn-sm btn-red" data-a="del">Xóa</button></div>';
+    d.querySelector('[data-a=save]').onclick=function(){upd('sotay_nqvideos',n.id,{title:$('[data-f=title]',d).value});};
+    d.querySelector('[data-a=tg]').onclick=function(){upd('sotay_nqvideos',n.id,{active:!n.active});};
+    d.querySelector('[data-a=del]').onclick=function(){if(confirm('Xóa video này?')){if(n.source==='upload'&&n.file_path)sb.storage.from('sotay').remove([n.file_path]);del('sotay_nqvideos',n.id);}};
+    d.querySelector('[data-a=up]').onclick=function(){move('sotay_nqvideos',NQV,n.id,-1);};
+    d.querySelector('[data-a=down]').onclick=function(){move('sotay_nqvideos',NQV,n.id,1);};
+    var rb=d.querySelector('[data-a=rep]');if(rb)rb.onclick=function(){pickAny(false,function(fs){replaceNqv(n,fs[0]);});};
+    el.appendChild(d);});
+}
+async function addNqvFiles(files){busy(true);var base=NQV.length?Math.max.apply(null,NQV.map(function(x){return x.display_order||0;})):0;var ok=0;
+  try{for(var i=0;i<files.length;i++){var f=files[i];
+      if(f.type&&f.type.indexOf('video/')!==0&&!/\.(mp4|mov|m4v|webm|mkv|avi|wmv)$/i.test(f.name)){toast('Bỏ qua (không phải video): '+f.name,'err');continue;}
+      var u=await uploadFile(f,'nqvideos');
+      var r=await sb.from('sotay_nqvideos').insert({title:f.name.replace(/\.[^.]+$/,''),file_name:f.name,file_url:u.url,file_path:u.path,source:'upload',display_order:base+i+1,active:true});
+      if(r.error)throw r.error;ok++;}
+    if(ok)toast('Đã thêm '+ok+' video ✓','ok');}catch(e){toast('Lỗi: '+(e.message||e),'err');}busy(false);}
+function isYT(u){return /(youtube\.com|youtu\.be)/i.test(u||'');}
+async function addNqvLink(){var t=($('#nqvLinkTitle').value||'').trim();var u=($('#nqvLinkUrl').value||'').trim();
+  if(!u){toast('Dán link YouTube trước đã','err');return;}
+  if(!/^https?:\/\//i.test(u)){u='https://'+u;}
+  if(!isYT(u)){toast('Link này không phải YouTube. Muốn người xem tải về thì hãy tải file video lên.','err');return;}
+  busy(true);var ordv=NQV.length?Math.max.apply(null,NQV.map(function(x){return x.display_order||0;}))+1:1;
+  var r=await sb.from('sotay_nqvideos').insert({title:t||'Video YouTube',file_name:'',file_url:u,file_path:'',source:'youtube',display_order:ordv,active:true});
+  busy(false);if(r.error){toast('Lỗi: '+r.error.message,'err');}else{$('#nqvLinkTitle').value='';$('#nqvLinkUrl').value='';toast('Đã thêm link YouTube ✓','ok');}}
+async function replaceNqv(n,file){if(!file)return;busy(true);try{var u=await uploadFile(file,'nqvideos');if(n.source==='upload'&&n.file_path)await sb.storage.from('sotay').remove([n.file_path]);
+  var r=await sb.from('sotay_nqvideos').update({file_url:u.url,file_path:u.path,file_name:file.name,source:'upload'}).eq('id',n.id);if(r.error)throw r.error;toast('Đã thay video ✓','ok');}catch(e){toast('Lỗi: '+(e.message||e),'err');}busy(false);}
+(function(){var dz=$('#nqvDrop');if(!dz)return;
+  dz.addEventListener('click',function(){pickAny(true,addNqvFiles);});
+  ['dragenter','dragover'].forEach(function(ev){dz.addEventListener(ev,function(e){e.preventDefault();e.stopPropagation();dz.classList.add('drag');});});
+  ['dragleave','drop'].forEach(function(ev){dz.addEventListener(ev,function(e){e.preventDefault();e.stopPropagation();dz.classList.remove('drag');});});
+  dz.addEventListener('drop',function(e){var fs=e.dataTransfer&&e.dataTransfer.files;if(fs&&fs.length)addNqvFiles(fs);});
+  var ab=$('#addNqvLink');if(ab)ab.onclick=addNqvLink;
 })();
 
 /* ============================================================ TIN TỨC (editor Quill) ============================================================ */

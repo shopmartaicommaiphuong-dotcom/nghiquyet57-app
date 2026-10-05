@@ -71,6 +71,15 @@ h1,h2,h3{font-weight:900;line-height:1.08;text-wrap:balance;letter-spacing:-.01e
 .refrow .rinfo span{color:var(--muted);font-size:.77rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block}
 .refrow .rdl{flex:none;width:34px;height:34px;border-radius:50%;background:#fff;border:1px solid var(--line2);display:grid;place-items:center;color:var(--gold-d);font-size:1rem}
 .refempty{padding:20px;color:var(--muted);font-size:.9rem;text-align:center}
+.refbtn[hidden],.refpanel[hidden],.dlwrap[hidden]{display:none}
+.refrow .rtag{flex:none;font-size:.68rem;font-weight:800;color:#fff;background:var(--red);padding:2px 8px;border-radius:100px;margin-left:6px;vertical-align:middle}
+.refbtn.vid .refcnt{background:rgba(200,32,43,.1);color:var(--red-d)}
+.refbtn.vid.on{background:linear-gradient(135deg,var(--red),var(--red-d));color:#fff;border-color:transparent}
+.refbtn.vid.on .refcnt{background:rgba(255,255,255,.28);color:#fff}
+.refbtn.vid:hover{border-color:var(--red);box-shadow:0 16px 28px -16px rgba(200,32,43,.4)}
+.vidpanel .refhead{background:linear-gradient(145deg,#FDF0F1,#F8E3E5)}
+.vidpanel .refrow:hover{background:#FCEEEF}
+.vidpanel .refrow .rdl{color:var(--red-d)}
 .figure{position:relative;border-radius:20px;overflow:hidden;border:1px solid var(--line2);box-shadow:0 30px 60px -30px rgba(24,35,56,.6);transform:perspective(1400px) rotateY(-6deg) rotateX(2deg);transition:transform .5s}
 .figure:hover{transform:perspective(1400px) rotateY(-2deg)}
 .figure img{display:block;width:100%;height:auto}
@@ -484,10 +493,15 @@ body>section,body>header,body>footer{position:relative;z-index:1}
     <div class="dlwrap" id="dlWrap" hidden>
       <a class="dlbtn" id="dlBtn" href="#" target="_blank" rel="noopener" download><span class="dlic">📘</span><span>Sổ Tay Thực Thi Nghị Quyết 57</span></a>
       <button type="button" class="refbtn" id="refToggle" hidden><span class="dlic">📑</span><span>Tài liệu tham chiếu</span><span class="refcnt" id="refCnt">0</span></button>
+      <button type="button" class="refbtn vid" id="vidToggle" hidden><span class="dlic">🎬</span><span>Video Nghị Quyết 57</span><span class="refcnt" id="vidCnt">0</span></button>
     </div>
     <div class="refpanel" id="refPanel" hidden>
       <div class="refhead"><span>📑 Danh sách tài liệu tham chiếu</span><button type="button" class="refclose" id="refClose" aria-label="Đóng">&times;</button></div>
       <div class="reflist" id="refList"></div>
+    </div>
+    <div class="refpanel vidpanel" id="vidPanel" hidden>
+      <div class="refhead"><span>🎬 Danh sách Video Nghị Quyết 57</span><button type="button" class="refclose" id="vidClose" aria-label="Đóng">&times;</button></div>
+      <div class="reflist" id="vidList"></div>
     </div>
     <a class="scrolldown" href="#s1"><i>↓</i> Cuộn để khám phá</a>
   </div>
@@ -925,16 +939,18 @@ body>section,body>header,body>footer{position:relative;z-index:1}
   var sb=supabase.createClient(SB_URL,SB_ANON);
   var wrap=document.getElementById('dlWrap'),btn=document.getElementById('dlBtn');
   if(!wrap||!btn)return;
+  window.__dlSync=function(){var any=false;[].forEach.call(wrap.children,function(c){if(!c.hidden)any=true;});wrap.hidden=!any;};
+  btn.hidden=true;
   function render(){
     sb.from('sotay_docs').select('*').eq('active',true).order('display_order').order('id',{ascending:false}).limit(1)
       .then(function(res){
         var d=(res&&res.data&&res.data[0])||null;
-        if(res&&res.error){wrap.hidden=true;return;}
-        if(!d||!d.file_url){wrap.hidden=true;return;}
+        if(res&&res.error){btn.hidden=true;window.__dlSync();return;}
+        if(!d||!d.file_url){btn.hidden=true;window.__dlSync();return;}
         btn.href=d.file_url;
         btn.setAttribute('download',d.file_name||'So-tay-Nghi-quyet-57.pdf');
         btn.querySelector('span:last-child').textContent=d.title||'Sổ Tay Thực Thi Nghị Quyết 57';
-        wrap.hidden=false;
+        btn.hidden=false;window.__dlSync();
       });
   }
   render();
@@ -954,9 +970,9 @@ body>section,body>header,body>footer{position:relative;z-index:1}
     sb.from('sotay_refs').select('*').eq('active',true).order('display_order').order('id',{ascending:false})
       .then(function(res){
         var d=(res&&res.data)||[];
-        if(res&&res.error){tbtn.hidden=true;panel.hidden=true;return;}
-        if(!d.length){tbtn.hidden=true;panel.hidden=true;return;}
-        tbtn.hidden=false;cnt.textContent=d.length;
+        if(res&&res.error){tbtn.hidden=true;panel.hidden=true;window.__dlSync&&window.__dlSync();return;}
+        if(!d.length){tbtn.hidden=true;panel.hidden=true;window.__dlSync&&window.__dlSync();return;}
+        tbtn.hidden=false;window.__dlSync&&window.__dlSync();cnt.textContent=d.length;
         list.innerHTML=d.map(function(r){
           return '<a class="refrow" href="'+esc(r.file_url)+'" target="_blank" rel="noopener" download>'+
             '<span class="ric">'+icon(r.file_name)+'</span>'+
@@ -969,6 +985,48 @@ body>section,body>header,body>footer{position:relative;z-index:1}
   tbtn.addEventListener('click',function(){var willOpen=panel.hidden;panel.hidden=!willOpen;tbtn.classList.toggle('on',willOpen);});
   if(closeB)closeB.addEventListener('click',function(){panel.hidden=true;tbtn.classList.remove('on');});
   sb.channel('sotay-refs').on('postgres_changes',{event:'*',schema:'public',table:'sotay_refs'},render).subscribe();
+})();
+</script>
+<script>
+/* ===== Nút + vùng "Video Nghị Quyết 57" — đồng bộ realtime với dashboard Super Admin (bảng sotay_nqvideos) ===== */
+(function(){
+  if(!window.SB_URL||!window.SB_ANON||String(SB_URL).indexOf('YOUR-')>=0){return;}
+  var sb=supabase.createClient(SB_URL,SB_ANON);
+  var tbtn=document.getElementById('vidToggle'),panel=document.getElementById('vidPanel'),list=document.getElementById('vidList'),cnt=document.getElementById('vidCnt'),closeB=document.getElementById('vidClose');
+  var rbtn=document.getElementById('refToggle'),rpanel=document.getElementById('refPanel');
+  if(!tbtn||!panel||!list)return;
+  var esc=function(s){return (s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
+  function dlUrl(u,name){ /* ép trình duyệt TẢI VỀ (Supabase hỗ trợ ?download=) */
+    if(!u)return '#'; if(u.indexOf('/storage/v1/object/public/')<0)return u;
+    return u+(u.indexOf('?')>=0?'&':'?')+'download='+encodeURIComponent(name||'video');
+  }
+  function render(){
+    sb.from('sotay_nqvideos').select('*').eq('active',true).order('display_order').order('id',{ascending:false})
+      .then(function(res){
+        var d=(res&&res.data)||[];
+        if((res&&res.error)||!d.length){tbtn.hidden=true;panel.hidden=true;tbtn.classList.remove('on');window.__dlSync&&window.__dlSync();return;}
+        tbtn.hidden=false;window.__dlSync&&window.__dlSync();cnt.textContent=d.length;
+        list.innerHTML=d.map(function(r){
+          var yt=(r.source==='youtube');
+          var href=yt?r.file_url:dlUrl(r.file_url,r.file_name||r.title);
+          var attrs=yt?' target="_blank" rel="noopener"':' download="'+esc(r.file_name||r.title||'video')+'" rel="noopener"';
+          var sub=yt?'Video YouTube — bấm để xem':esc(r.file_name||'Video');
+          return '<a class="refrow" href="'+esc(href)+'"'+attrs+'>'+
+            '<span class="ric">'+(yt?'▶️':'🎬')+'</span>'+
+            '<span class="rinfo"><b>'+esc(r.title||r.file_name||'Video')+(yt?'<span class="rtag">YouTube</span>':'')+'</b><span>'+sub+'</span></span>'+
+            '<span class="rdl" aria-hidden="true">'+(yt?'↗':'⬇')+'</span></a>';
+        }).join('');
+      });
+  }
+  render();
+  tbtn.addEventListener('click',function(){
+    var willOpen=panel.hidden;panel.hidden=!willOpen;tbtn.classList.toggle('on',willOpen);
+    if(willOpen&&rpanel){rpanel.hidden=true;if(rbtn)rbtn.classList.remove('on');} /* mở video thì đóng tài liệu */
+    if(willOpen)panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+  });
+  if(rbtn)rbtn.addEventListener('click',function(){ if(!rpanel.hidden){panel.hidden=true;tbtn.classList.remove('on');} });
+  if(closeB)closeB.addEventListener('click',function(){panel.hidden=true;tbtn.classList.remove('on');});
+  sb.channel('sotay-nqvideos').on('postgres_changes',{event:'*',schema:'public',table:'sotay_nqvideos'},render).subscribe();
 })();
 </script>
 <script>
