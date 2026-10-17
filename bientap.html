@@ -31,6 +31,10 @@ body{margin:0;font-family:'Be Vietnam Pro',system-ui,Arial,sans-serif;color:var(
 .fld{text-align:left;margin-bottom:13px}.fld label{display:block;font-size:12.5px;font-weight:600;color:var(--mut);margin-bottom:5px}
 .fld input{width:100%;padding:11px 13px;border:1.5px solid var(--line);border-radius:11px;font-family:inherit;font-size:14px;background:#f7fbf8}
 .fld input:focus{outline:0;border-color:var(--green2);background:#fff;box-shadow:0 0 0 4px rgba(38,162,105,.14)}
+.pwwrap{position:relative}
+.pwwrap input{padding-right:42px}
+.eyebtn{position:absolute;top:50%;right:4px;transform:translateY(-50%);background:transparent;border:0;cursor:pointer;font-size:17px;line-height:1;padding:7px;color:var(--mut)}
+.eyebtn:hover{color:var(--ink)}
 .msg{font-size:13px;margin-top:10px;min-height:18px}.msg.err{color:var(--red)}
 .sec{background:var(--panel);border-radius:20px;box-shadow:var(--shadow);border:1px solid var(--line);padding:18px;margin-top:16px}
 .sec-h{display:flex;align-items:center;gap:11px;margin-bottom:4px}
@@ -89,7 +93,7 @@ textarea.inp{resize:vertical;min-height:60px;line-height:1.45}
       <div id="cfgBox"></div>
       <form id="loginForm">
         <div class="fld"><label>Email biên tập viên</label><input type="email" id="email" autocomplete="username" required></div>
-        <div class="fld"><label>Mật khẩu</label><input type="password" id="pass" autocomplete="current-password" required></div>
+        <div class="fld"><label>Mật khẩu</label><div class="pwwrap"><input type="password" id="pass" autocomplete="current-password" required><button type="button" class="eyebtn" id="passEye" tabindex="-1" aria-label="Hiện/ẩn mật khẩu">👁️</button></div></div>
         <button class="btn btn-green" style="width:100%;justify-content:center" type="submit">Đăng nhập</button>
         <div class="msg" id="loginMsg"></div>
       </form>
@@ -155,6 +159,7 @@ function gate(s){
 
 $('#loginForm').addEventListener('submit',async function(e){e.preventDefault();$('#loginMsg').textContent='Đang đăng nhập…';$('#loginMsg').className='msg';var r=await sb.auth.signInWithPassword({email:$('#email').value.trim(),password:$('#pass').value});if(r.error){$('#loginMsg').className='msg err';$('#loginMsg').textContent='Sai email/mật khẩu. '+r.error.message;}});
 $('#logout').addEventListener('click',function(){sb.auth.signOut();});
+(function(){var p=$('#pass'),b=$('#passEye');if(!p||!b)return;b.addEventListener('click',function(){var show=p.type==='password';p.type=show?'text':'password';b.textContent=show?'🙈':'👁️';p.focus();});})();
 function showLogin(){$('#loginView').hidden=false;$('#appView').hidden=true;}
 function showApp(s){$('#loginView').hidden=true;$('#appView').hidden=false;$('#whoami').textContent='Đã đăng nhập: '+(s.user&&s.user.email||'biên tập viên')+' · realtime';loadNews();subscribe();}
 
