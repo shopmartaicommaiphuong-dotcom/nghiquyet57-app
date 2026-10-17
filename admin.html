@@ -289,7 +289,18 @@ function nextOrd(a){return a.length?Math.max.apply(null,a.map(function(x){return
 if(!cfgOK){$('#cfgBox').innerHTML='<div class="cfgwarn">Chưa cấu hình Supabase — điền config.js rồi tải lại.</div>';$('#loginForm').hidden=true;}
 else{sb=supabase.createClient(SB_URL,SB_ANON,{auth:{persistSession:true,autoRefreshToken:true}});boot();}
 
-async function boot(){var s=(await sb.auth.getSession()).data.session;if(s)showApp(s);sb.auth.onAuthStateChange(function(_e,ss){if(ss)showApp(ss);else showLogin();});}
+function roleOf(s){var u=s&&s.user;var m=(u&&(u.user_metadata||{}))||{};return m.role||'';}
+function gate(s){
+  var r=roleOf(s);
+  if(r==='editor'){
+    $('#loginView').hidden=false;$('#appView').hidden=true;
+    $('#cfgBox').innerHTML='<div class="cfgwarn">Tài khoản <b>Biên tập viên</b> không dùng được Dashboard Super Admin.<br>Vui lòng đăng nhập tại <a href="bientap.html">Cổng Biên tập viên (bientap.html)</a>.</div>';
+    sb.auth.signOut();
+    return;
+  }
+  showApp(s);
+}
+async function boot(){var s=(await sb.auth.getSession()).data.session;if(s)gate(s);sb.auth.onAuthStateChange(function(_e,ss){if(ss)gate(ss);else showLogin();});}
 $('#loginForm').addEventListener('submit',async function(e){e.preventDefault();$('#loginMsg').textContent='Đang đăng nhập…';var r=await sb.auth.signInWithPassword({email:$('#email').value.trim(),password:$('#pass').value});if(r.error){$('#loginMsg').className='msg err';$('#loginMsg').textContent='Sai email/mật khẩu. '+r.error.message;}});
 $('#logout').addEventListener('click',function(){sb.auth.signOut();});
 function showLogin(){$('#loginView').hidden=false;$('#appView').hidden=true;}
