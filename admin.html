@@ -171,6 +171,7 @@ textarea.inp{resize:vertical;min-height:60px;line-height:1.45}
       <button data-p="doc">📘 Sổ tay PDF</button>
       <button data-p="refs">📑 Tài liệu tham chiếu</button>
       <button data-p="nqv">🎞️ Video Nghị Quyết 57</button>
+      <button data-p="staff">👤 Biên tập viên</button>
     </div>
 
     <div id="p-img"></div>
@@ -263,6 +264,21 @@ textarea.inp{resize:vertical;min-height:60px;line-height:1.45}
         <div id="refList"></div>
       </div>
     </div>
+
+    <div id="p-staff" hidden>
+      <div class="sec">
+        <div class="sec-h"><div class="ic i-vt">👤</div><h3>Tài khoản Biên tập viên — đăng nhập tại <code>bientap.html</code></h3></div>
+        <p class="desc">Tạo / đổi mật khẩu / xóa tài khoản Biên tập viên ngay tại đây — không cần vào Supabase nữa. Tài khoản tạo ở đây <b>chỉ quản lý được Tin tức</b>, không đụng được các phần khác. Lưu xong, gửi đúng Email + Mật khẩu cho chuyên viên để họ đăng nhập <b>bientap.html</b>.</p>
+        <div class="row2">
+          <div class="grow">
+            <input class="inp" id="st-email" placeholder="Email biên tập viên mới (vd: bientap@congty.vn)">
+            <input class="inp" id="st-pass" type="password" placeholder="Mật khẩu (tối thiểu 6 ký tự)">
+          </div>
+          <div class="acts"><button class="btn btn-sm btn-blue" id="st-add">＋ Tạo tài khoản</button></div>
+        </div>
+        <div id="staffList" style="margin-top:6px"></div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -309,11 +325,11 @@ $('#loginForm').addEventListener('submit',async function(e){e.preventDefault();$
 $('#logout').addEventListener('click',function(){sb.auth.signOut();});
 (function(){var p=$('#pass'),b=$('#passEye');if(!p||!b)return;b.addEventListener('click',function(){var show=p.type==='password';p.type=show?'text':'password';b.textContent=show?'🙈':'👁️';p.focus();});})();
 function showLogin(){$('#loginView').hidden=false;$('#appView').hidden=true;}
-function showApp(s){$('#loginView').hidden=true;$('#appView').hidden=false;$('#whoami').textContent='Đã đăng nhập: '+(s.user&&s.user.email||'admin')+' · realtime';loadImages();loadOrg();loadVideos();loadNews();loadDocs();loadRefs();loadNqv();subscribe();}
+function showApp(s){$('#loginView').hidden=true;$('#appView').hidden=false;$('#whoami').textContent='Đã đăng nhập: '+(s.user&&s.user.email||'admin')+' · realtime';loadImages();loadOrg();loadVideos();loadNews();loadDocs();loadRefs();loadNqv();loadStaff();subscribe();}
 
 document.querySelectorAll('.tabbar button').forEach(function(b){b.onclick=function(){
   document.querySelectorAll('.tabbar button').forEach(function(x){x.classList.remove('on');});b.classList.add('on');
-  ['img','lead','portal','profile','video','news','doc','refs','nqv'].forEach(function(p){$('#p-'+p).hidden=(p!==b.getAttribute('data-p'));});};});
+  ['img','lead','portal','profile','video','news','doc','refs','nqv','staff'].forEach(function(p){$('#p-'+p).hidden=(p!==b.getAttribute('data-p'));});};});
 
 /* ===== UPLOAD + DROPZONE dùng chung ===== */
 async function uploadFile(file,folder){
@@ -803,6 +819,48 @@ function bindNewsModal(){
   var m=$('#newsModal');if(m)m.addEventListener('click',function(e){if(e.target===m)closeNews();});
 }
 if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',bindNewsModal);}else{bindNewsModal();}
+
+/* ============================================================ BIÊN TẬP VIÊN (tạo/đổi mật khẩu/xóa — gọi API server, dùng service_role phía máy chủ) ============================================================ */
+var STAFF=[];
+function fmtDate(s){if(!s)return 'chưa đăng nhập lần nào';try{return new Date(s).toLocaleString('vi-VN');}catch(e){return s;}}
+async function staffApi(action,payload){
+  var ss=(await sb.auth.getSession()).data.session;var token=ss&&ss.access_token;
+  if(!token)throw new Error('Phiên đăng nhập hết hạn, hãy tải lại trang.');
+  var r=await fetch('/api/manage-editor',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify(Object.assign({action:action},payload||{}))});
+  var j=null;try{j=await r.json();}catch(e){}
+  if(!r.ok||!j||j.error)throw new Error((j&&j.error)||('Lỗi máy chủ ('+r.status+')'));
+  return j;
+}
+async function loadStaff(){var el=$('#staffList');if(!el)return;el.innerHTML='<p class="hint">Đang tải danh sách…</p>';
+  try{var j=await staffApi('list');STAFF=j.users||[];renderStaff();}
+  catch(e){el.innerHTML='<p class="hint" style="color:var(--red)">Không tải được danh sách: '+esc(e.message)+'<br>(Kiểm tra đã deploy /api/manage-editor.js và đã khai báo SUPABASE_SERVICE_ROLE_KEY trong Vercel Environment Variables chưa.)</p>';}
+}
+function renderStaff(){var el=$('#staffList');if(!el)return;el.innerHTML='';
+  if(!STAFF.length){el.innerHTML='<p class="hint">Chưa có tài khoản Biên tập viên nào. Tạo mới ở trên.</p>';return;}
+  STAFF.forEach(function(u){var d=document.createElement('div');d.className='row2';
+    d.innerHTML='<div class="chip" style="flex:none">👤</div>'+
+      '<div class="grow"><b style="font-size:.98rem">'+esc(u.email)+'</b>'+
+        '<span class="hint">Tạo lúc: '+esc(fmtDate(u.created_at))+' · Đăng nhập gần nhất: '+esc(fmtDate(u.last_sign_in_at))+'</span>'+
+        '<input class="inp" type="password" data-f="npass" placeholder="Đặt mật khẩu mới (bỏ trống nếu không đổi)">'+
+      '</div>'+
+      '<div class="acts"><button class="btn btn-sm btn-gold" data-a="pw">Đổi mật khẩu</button><button class="btn btn-sm btn-red" data-a="del">Xóa tài khoản</button></div>';
+    d.querySelector('[data-a=pw]').onclick=async function(){
+      var np=d.querySelector('[data-f=npass]').value;
+      if(!np||np.length<6){toast('Mật khẩu mới tối thiểu 6 ký tự','err');return;}
+      busy(true);try{await staffApi('update',{id:u.id,password:np});toast('Đã đổi mật khẩu ✓','ok');d.querySelector('[data-f=npass]').value='';}catch(e){toast('Lỗi: '+e.message,'err');}busy(false);
+    };
+    d.querySelector('[data-a=del]').onclick=async function(){
+      if(!confirm('Xóa tài khoản '+u.email+'? Biên tập viên này sẽ KHÔNG đăng nhập được nữa.'))return;
+      busy(true);try{await staffApi('delete',{id:u.id});toast('Đã xóa tài khoản','ok');loadStaff();}catch(e){toast('Lỗi: '+e.message,'err');}busy(false);
+    };
+    el.appendChild(d);});
+}
+(function(){var b=$('#st-add');if(!b)return;b.onclick=async function(){
+  var email=($('#st-email').value||'').trim();var pass=$('#st-pass').value||'';
+  if(!email){toast('Nhập email','err');return;}
+  if(!pass||pass.length<6){toast('Mật khẩu tối thiểu 6 ký tự','err');return;}
+  busy(true);try{await staffApi('create',{email:email,password:pass});toast('Đã tạo tài khoản Biên tập viên ✓','ok');$('#st-email').value='';$('#st-pass').value='';loadStaff();}catch(e){toast('Lỗi: '+e.message,'err');}busy(false);
+};})();
 </script>
 
 <div id="newsModal">
