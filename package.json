@@ -1,8 +1,8 @@
-﻿{
+{
   "name": "nghiquyet57-app",
   "version": "1.1.0",
   "private": true,
-  "description": "Sổ tay Nghị quyết 57 — web tĩnh + serverless: quản lý Biên tập viên, lấy bài từ link",
+  "description": "So tay Nghi quyet 57 - web tinh + serverless: quan ly Bien tap vien, lay bai tu link",
   "dependencies": {
     "@mozilla/readability": "^0.6.0",
     "@supabase/supabase-js": "^2.45.4",
