@@ -1,4 +1,13 @@
-{
+﻿{
   "cleanUrls": true,
-  "trailingSlash": false
+  "trailingSlash": false,
+  "functions": {
+    "api/import-article.js": {
+      "maxDuration": 60,
+      "memory": 1024
+    }
+  },
+  "regions": [
+    "sin1"
+  ]
 }

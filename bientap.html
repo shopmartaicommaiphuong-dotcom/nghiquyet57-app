@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
@@ -82,6 +82,19 @@ textarea.inp{resize:vertical;min-height:60px;line-height:1.45}
 .attx .ai{font-size:1.7rem;display:block;padding:6px}
 .attx .an{font-size:11px;color:#5b6b86;display:block;word-break:break-word;margin-top:4px;line-height:1.3}
 .attx button{position:absolute;top:2px;right:2px;border:0;background:#c62828;color:#fff;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:11px;line-height:1}
+
+/* ===== LẤY BÀI TỪ LINK (dán link → tự chép chữ + ảnh) ===== */
+#busy{z-index:10050}#toast{z-index:10060}
+.impbox{margin:14px 0 4px;border:1.5px solid #f0d089;background:linear-gradient(135deg,#fffaf0,#fff4dc);border-radius:16px;padding:14px 16px}
+.impbox .imp-t{font-size:13.2px;color:#5a4300;line-height:1.5;margin-bottom:10px}
+.impbox .imp-t b{color:#7a5200}
+.imp-r{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.imp-r .inp{flex:1 1 320px;min-width:0;background:#fff}
+.imp-st{font-size:12.6px;margin-top:8px;min-height:0;line-height:1.45}
+.imp-st.run{color:#7a5b00}.imp-st.ok{color:#188a4e;font-weight:700}.imp-st.err{color:#c62828;font-weight:700}
+.imp-in{display:flex;gap:8px;align-items:center;background:#fff8e6;border:1.5px dashed #e9c766;border-radius:12px;padding:10px;margin-bottom:6px;flex-wrap:wrap}
+.imp-in .inp{flex:1 1 260px;min-width:0}
+.imp-in .lb{font-weight:800;font-size:12.6px;color:#7a5200;flex:0 0 100%}
 </style>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.snow.min.css" rel="stylesheet">
 </head>
@@ -116,6 +129,15 @@ textarea.inp{resize:vertical;min-height:60px;line-height:1.45}
         <div class="sec-h"><div class="ic">📰</div><h3>Tin tức hoạt động — hiển thị dưới cùng trang chủ</h3><span class="cnt" id="newsCnt">0 bài</span></div>
         <p class="desc">Soạn bài viết với trình soạn thảo đầy đủ (định dạng chữ, link, chèn/kéo-thả ảnh, đính kèm mọi file). Đăng được <b>không giới hạn</b> số bài. Lưu xong, trang chủ cập nhật <b>realtime</b> ngay lập tức.</p>
         <button class="btn btn-sm btn-green" id="addNews">＋ Thêm bài viết</button>
+        <div class="impbox">
+          <div class="imp-t">🔗 <b>Lấy bài tự động từ link</b> — dán link một bài viết ở bất kỳ trang web nào (báo, cổng thông tin, blog…). Hệ thống tự chép <b>tiêu đề, mô tả, ảnh đại diện, toàn bộ chữ và ảnh</b> về kho của mình. Người đọc bấm vào xem ngay trên trang NQ57, không bị chuyển sang trang khác.</div>
+          <div class="imp-r">
+            <input class="inp" id="impUrl" type="url" inputmode="url" placeholder="Dán link bài viết, ví dụ: https://baohaiphong.vn/....html">
+            <button class="btn btn-sm btn-gold" id="impPub" type="button">⚡ Lấy &amp; đăng ngay</button>
+            <button class="btn btn-sm mini" id="impEdit" type="button">📝 Lấy &amp; xem trước</button>
+          </div>
+          <div class="imp-st" id="impSt"></div>
+        </div>
         <div id="newsList" style="margin-top:12px"></div>
       </div>
     </div>
@@ -266,12 +288,83 @@ function bindNewsModal(){
   var m=$('#newsModal');if(m)m.addEventListener('click',function(e){if(e.target===m)closeNews();});
 }
 if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',bindNewsModal);}else{bindNewsModal();}
+/* ============================================================ LẤY BÀI TỪ LINK — dán link là có bài (chữ + ảnh về kho của mình) ============================================================ */
+function impStatus(id,cls,msg){var st=$('#'+id);if(st){st.className='imp-st '+(cls||'');st.textContent=msg||'';}}
+async function importArticle(url,stId){
+  url=(url||'').trim();
+  if(!url){toast('Dán link bài viết vào trước đã','err');return null;}
+  var ses=(await sb.auth.getSession()).data.session;
+  if(!ses){toast('Phiên đăng nhập đã hết — vui lòng đăng nhập lại','err');return null;}
+  impStatus(stId,'run','⏳ Đang đọc bài và tải ảnh về kho… (khoảng 5–40 giây tuỳ số ảnh)');
+  busy(true);
+  try{
+    var r=await fetch('/api/import-article',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+ses.access_token},body:JSON.stringify({url:url})});
+    var txt=await r.text(),j=null;
+    try{j=JSON.parse(txt);}catch(e){throw new Error(r.status===404?'Máy chủ chưa có chức năng lấy bài — cần deploy bản mới.':(r.status===504?'Trang gốc phản hồi quá chậm, anh/chị thử lại sau ít phút.':'Máy chủ báo lỗi '+r.status));}
+    if(!r.ok||!j||!j.ok)throw new Error((j&&j.error)||('Lỗi '+r.status));
+    var im=j.images||{};
+    impStatus(stId,'ok','✓ Đã lấy: “'+(j.title||'(không tiêu đề)')+'” · ảnh lưu về kho: '+(im.saved||0)+'/'+(im.total||0)+(im.failed?(' ('+im.failed+' ảnh giữ link gốc)'):''));
+    return j;
+  }catch(e){impStatus(stId,'err','✗ '+(e&&e.message?e.message:e));toast('Không lấy được bài: '+(e&&e.message?e.message:e),'err');return null;}
+  finally{busy(false);}
+}
+function impTopOrder(){return NEWS.length?Math.min.apply(null,NEWS.map(function(x){return x.display_order||0;}))-1:1;}
+function impDup(j){var t=(j.title||'').trim().toLowerCase(),u=String(j.source_url||'').split('?')[0];
+  return NEWS.filter(function(n){return (t&&(n.title||'').trim().toLowerCase()===t)||(u&&(n.content||'').indexOf(u)>=0);})[0];}
+function impFill(j,isNew){
+  ensureQuill();
+  if(j.title)$('#nw-title').value=j.title;
+  if(j.excerpt)$('#nw-excerpt').value=j.excerpt;
+  if(j.cover_url){newsCover={url:j.cover_url,path:j.cover_path||''};renderNewsCover();}
+  quill.setContents([],'silent');
+  quill.clipboard.dangerouslyPasteHTML(j.content||'');
+  if(isNew)$('#nw-order').value=impTopOrder();
+  $('#nw-active').checked=true;
+  var b=$('#newsModal .nwbody');if(b)b.scrollTop=0;
+}
+async function impPublishNow(){
+  var inp=$('#impUrl');var j=await importArticle(inp.value,'impSt');if(!j)return;
+  var d=impDup(j);
+  if(d&&!confirm('Bài “'+(d.title||'')+'” có vẻ đã được đăng rồi.\nVẫn đăng thêm một bản nữa?')){impStatus('impSt','','Đã huỷ — không đăng trùng.');return;}
+  var data={title:j.title||'(Chưa có tiêu đề)',excerpt:j.excerpt||'',content:j.content||'',cover_url:j.cover_url||'',cover_path:j.cover_path||'',attachments:[],tags:'',display_order:impTopOrder(),active:true};
+  busy(true);
+  try{var r=await sb.from('sotay_news').insert(data);
+    if(r.error){toast('Lỗi đăng bài: '+r.error.message,'err');impStatus('impSt','err','✗ Lỗi đăng bài: '+r.error.message);}
+    else{toast('Đã đăng lên trang chủ ✓','ok');impStatus('impSt','ok','✓ Đã đăng lên đầu mục Tin tức trang chủ: “'+data.title+'”. Bấm “Sửa” ở danh sách bên dưới nếu muốn chỉnh.');inp.value='';loadNews();}
+  }catch(e){toast('Lỗi đăng bài: '+(e&&e.message?e.message:e),'err');}
+  finally{busy(false);}
+}
+async function impPreview(){
+  var inp=$('#impUrl');var j=await importArticle(inp.value,'impSt');if(!j)return;
+  var d=impDup(j);if(d)toast('Lưu ý: có vẻ bài này đã đăng rồi (“'+(d.title||'')+'”)','err');
+  openNews(null);impFill(j,true);impStatus('nw-impSt','ok','✓ Đã điền sẵn từ link — xem lại rồi bấm “Lưu bài viết”.');inp.value='';
+}
+async function impInModal(){
+  var btn=$('#nw-impBtn');if(btn)btn.disabled=true;
+  try{var j=await importArticle($('#nw-impUrl').value,'nw-impSt');if(!j)return;
+    var hasBody=quill&&quill.getText().trim().length>0;
+    if(hasBody&&!confirm('Nội dung đang soạn sẽ được THAY bằng bài lấy từ link. Tiếp tục?'))return;
+    impFill(j,!curNews);$('#nw-impUrl').value='';}
+  finally{if(btn)btn.disabled=false;}
+}
+function bindImport(){
+  var p=$('#impPub');if(p)p.onclick=impPublishNow;
+  var e=$('#impEdit');if(e)e.onclick=impPreview;
+  var u=$('#impUrl');if(u)u.addEventListener('keydown',function(ev){if(ev.key==='Enter'){ev.preventDefault();impPreview();}});
+  var mb=$('#nw-impBtn');if(mb)mb.onclick=impInModal;
+  var mu=$('#nw-impUrl');if(mu)mu.addEventListener('keydown',function(ev){if(ev.key==='Enter'){ev.preventDefault();impInModal();}});
+}
+// Mở bài mới/sửa bài → xoá trạng thái lấy bài cũ trong khung soạn
+var _openNewsOrig=openNews;
+openNews=function(n){impStatus('nw-impSt','','');var x=$('#nw-impUrl');if(x)x.value='';return _openNewsOrig(n);};
+if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',bindImport);}else{bindImport();}
 </script>
 
 <div id="newsModal">
  <div class="nwbox">
   <div class="nwhead"><span>📰 Bài viết — Tin tức hoạt động</span><button type="button" id="nw-x" class="nwx">&times;</button></div>
   <div class="nwbody">
+    <div class="imp-in"><span class="lb">🔗 Không muốn gõ? Dán link bài viết ở trang khác — tự điền tiêu đề, mô tả, ảnh &amp; nội dung</span><input class="inp" id="nw-impUrl" type="url" inputmode="url" placeholder="https://..."><button class="btn btn-sm btn-green" type="button" id="nw-impBtn">Lấy bài</button><div class="imp-st" id="nw-impSt" style="flex:0 0 100%;margin-top:0"></div></div>
     <label class="nwl">Tiêu đề *</label><input class="inp" id="nw-title" placeholder="Tiêu đề bài viết">
     <label class="nwl">Mô tả ngắn (hiển thị ngoài thẻ tin)</label><textarea class="inp" id="nw-excerpt" placeholder="Tóm tắt ngắn gọn"></textarea>
     <label class="nwl">Ảnh đại diện (16:9)</label>
