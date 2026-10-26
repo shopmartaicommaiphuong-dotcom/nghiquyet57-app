@@ -155,6 +155,14 @@ textarea.inp{resize:vertical;min-height:60px;line-height:1.45}
 .fdz span{color:#8a6d1f;font-size:12.2px}
 .fdz-opt{display:flex;gap:7px;align-items:center;margin-top:8px;font-size:12.6px;color:#5a4300;cursor:pointer;user-select:none}
 #busyMsg{position:absolute;left:0;right:0;top:calc(50% + 42px);text-align:center;font-weight:700;color:#132038;font-size:14px;padding:0 16px}
+/* ===== Ô THỜI GIAN CHUYỂN SLIDE TRANG CHỦ ===== */
+.spdbox{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:14px 0 0;padding:12px 16px;border-radius:14px;background:linear-gradient(135deg,#eef6ff,#f6fbff);border:1.5px solid #c9dcf5;font-size:13px;color:#1d3557}
+.spdbox b{color:#14365f}
+.spdbox .spd-in{display:flex;align-items:center;gap:6px}
+.spdbox input{width:84px;padding:8px 10px;border:1.5px solid #b9cde8;border-radius:10px;font:inherit;font-weight:800;font-size:15px;text-align:center;background:#fff}
+.spdbox input:focus{outline:0;border-color:#2f7be6;box-shadow:0 0 0 3px rgba(47,123,230,.15)}
+.spdbox .spd-st{font-size:12.4px;color:#5b6b86;flex:1 1 220px}
+.spdbox .spd-st.ok{color:#188a4e;font-weight:700}.spdbox .spd-st.err{color:#c62828;font-weight:700}
 </style>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.snow.min.css" rel="stylesheet">
 </head>
@@ -244,6 +252,12 @@ textarea.inp{resize:vertical;min-height:60px;line-height:1.45}
         <div class="sec-h"><div class="ic i-gal">📰</div><h3>Tin tức hoạt động — hiển thị dưới cùng trang chủ</h3></div>
         <p class="desc">Soạn bài viết với trình soạn thảo đầy đủ (định dạng chữ, link, chèn/kéo-thả ảnh, đính kèm mọi file). Đồng bộ <b>realtime</b>.</p>
         <button class="btn btn-sm btn-blue" id="addNews">＋ Thêm bài viết</button>
+        <div class="spdbox" id="spdBox">
+          <span>⏱️ <b>Thời gian chuyển slide tin ở trang chủ:</b></span>
+          <span class="spd-in"><input type="number" id="spdSec" min="1" max="600" step="0.5" value="4" inputmode="decimal"> giây / 1 tin</span>
+          <button class="btn btn-sm btn-gold" type="button" id="spdSave">💾 Lưu</button>
+          <span class="spd-st" id="spdSt">Số càng nhỏ trượt càng nhanh. Dùng chung cho Super Admin &amp; Biên tập viên.</span>
+        </div>
         <div class="impbox">
           <div class="imp-t">🔗 <b>Lấy bài tự động từ link</b> — dán link một bài viết ở bất kỳ trang web nào (báo, cổng thông tin, blog…). Hệ thống tự chép <b>tiêu đề, mô tả, ảnh đại diện, toàn bộ chữ và ảnh</b> về kho của mình. Người đọc bấm vào xem ngay trên trang NQ57, không bị chuyển sang trang khác.</div>
           <div class="imp-r">
@@ -1163,6 +1177,33 @@ function bindFileImport(){
     if($('#newsModal')&&$('#newsModal').classList.contains('open'))fiOpenInModal(fs[0],false);else fiPublish(fs);});
 }
 if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',bindFileImport);}else{bindFileImport();}
+/* ============================================================ THỜI GIAN CHUYỂN SLIDE TRANG CHỦ — đồng bộ Super Admin ⇄ Biên tập viên ⇄ Trang chủ ============================================================ */
+var SPD_PATH='news/_cai-dat/slider.json',spdChan=null,spdLoaded=false;
+function spdMsg(cls,t){var e=$('#spdSt');if(e){e.className='spd-st '+(cls||'');e.textContent=t;}}
+function spdShow(v,who){var i=$('#spdSec');if(i&&document.activeElement!==i)i.value=v;if(who)spdMsg('ok','✓ Đang áp dụng: '+v+' giây/tin'+(who?(' · cập nhật bởi '+who):''));}
+async function spdLoad(){
+  try{var r=await sb.storage.from('sotay').download(SPD_PATH);
+    if(r&&r.data){var j=JSON.parse(await r.data.text());if(j&&j.seconds)spdShow(j.seconds,j.by||'');}
+    else spdMsg('','Đang dùng mặc định 4 giây/tin. Nhập số giây rồi bấm Lưu để thay đổi.');
+  }catch(e){spdMsg('','Đang dùng mặc định 4 giây/tin. Nhập số giây rồi bấm Lưu để thay đổi.');}
+  if(!spdChan){spdChan=sb.channel('nq57-settings');spdChan.on('broadcast',{event:'slider'},function(m){if(m&&m.payload&&m.payload.seconds)spdShow(m.payload.seconds,m.payload.by||'');}).subscribe();}
+}
+async function spdSave(){
+  var i=$('#spdSec'),v=parseFloat(String(i.value).replace(',','.'));
+  if(!isFinite(v)||v<1||v>600){spdMsg('err','✗ Nhập số giây từ 1 đến 600');i.focus();return;}
+  v=Math.round(v*2)/2;i.value=v;
+  var ses=(await sb.auth.getSession()).data.session,by=(ses&&ses.user&&ses.user.email)||'';
+  var body=JSON.stringify({seconds:v,by:by,updated_at:new Date().toISOString()});
+  var b=$('#spdSave');if(b)b.disabled=true;
+  try{var up=await sb.storage.from('sotay').upload(SPD_PATH,new Blob([body],{type:'application/json'}),{upsert:true,cacheControl:'0',contentType:'application/json'});
+    if(up.error)throw up.error;
+    try{if(spdChan)await spdChan.send({type:'broadcast',event:'slider',payload:{seconds:v,by:by}});}catch(e){}
+    spdShow(v,by);toast('Đã lưu: slide trang chủ chuyển mỗi '+v+' giây ✓','ok');
+  }catch(e){spdMsg('err','✗ Lỗi lưu: '+(e&&e.message?e.message:e));toast('Lỗi lưu thời gian slide','err');}
+  finally{if(b)b.disabled=false;}
+}
+(function(){var b=$('#spdSave');if(b)b.onclick=spdSave;var i=$('#spdSec');if(i)i.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();spdSave();}});})();
+var _loadNewsSpd=loadNews;loadNews=async function(){if(!spdLoaded&&sb){spdLoaded=true;spdLoad();}return _loadNewsSpd.apply(this,arguments);};
 
 if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',bindImport);}else{bindImport();}
 

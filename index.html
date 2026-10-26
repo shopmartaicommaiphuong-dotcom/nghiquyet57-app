@@ -1675,6 +1675,10 @@ body>section,body>header,body>footer{position:relative;z-index:1}
   // Mở bài viết → tạm dừng slide; đóng → chạy tiếp
   new MutationObserver(function(){SL.paused=modal.classList.contains('open');}).observe(modal,{attributes:true,attributeFilter:['class']});
   requestAnimationFrame(slFrame);
+  // Thời gian chuyển slide (giây) — do Super Admin / Biên tập viên đặt ở dashboard, đồng bộ realtime
+  function slSetSec(v){v=parseFloat(v);if(isFinite(v)&&v>=1&&v<=600){SL.every=Math.round(v*1000);if(SL.nextAt)SL.nextAt=Math.min(SL.nextAt,performance.now()+SL.every);}}
+  sb.storage.from('sotay').download('news/_cai-dat/slider.json').then(function(r){if(r&&r.data)return r.data.text();}).then(function(t){if(t){try{slSetSec(JSON.parse(t).seconds);}catch(e){}}}).catch(function(){});
+  sb.channel('nq57-settings').on('broadcast',{event:'slider'},function(m){if(m&&m.payload)slSetSec(m.payload.seconds);}).subscribe();
   document.getElementById('nm-close').onclick=close;
   modal.addEventListener('click',function(e){if(e.target===modal)close();});
   document.addEventListener('keydown',function(e){if(e.key==='Escape')close();});
