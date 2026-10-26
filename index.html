@@ -1496,6 +1496,30 @@ body>section,body>header,body>footer{position:relative;z-index:1}
 #sec-news .newshead{margin-bottom:22px}
 .newsgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:24px}
 @media(max-width:720px){.newsgrid{grid-template-columns:1fr}}
+/* ===== SLIDE TIN NỔI BẬT — trượt vô hạn phải → trái, kéo được, có mũi tên ===== */
+.nslider{position:relative;margin:0 0 34px;user-select:none;-webkit-user-select:none}
+.nsl-view{overflow:hidden;padding:10px 0 36px;margin-bottom:-18px;touch-action:pan-y;cursor:grab;
+  -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 34px,#000 calc(100% - 34px),transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 34px,#000 calc(100% - 34px),transparent 100%)}
+.nsl-view.drag{cursor:grabbing}
+.nsl-track{display:flex;gap:24px;will-change:transform}
+.nsl-card{flex:0 0 auto;width:680px;background:var(--card,#FFFDF7);border-radius:20px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;
+  box-shadow:0 0 0 1px var(--gold-l,#EAC85A),0 18px 40px -24px rgba(70,40,10,.55);transition:box-shadow .3s,transform .3s}
+.nsl-card:hover{box-shadow:0 0 0 1.5px var(--gold,#C6971E),0 28px 54px -22px rgba(70,40,10,.65);transform:translateY(-4px)}
+.nsl-cover{width:100%;aspect-ratio:16/9;background:linear-gradient(135deg,#6E0E13,#9E1B22 55%,#C6971E);overflow:hidden;position:relative}
+.nsl-cover img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .6s;pointer-events:none}
+.nsl-card:hover .nsl-cover img{transform:scale(1.05)}
+.nsl-cover .nsl-ph{position:absolute;inset:0;display:grid;place-items:center;padding:24px;color:#FFF3D6;font-weight:900;font-size:1.5rem;text-align:center;line-height:1.3}
+.nsl-badge{position:absolute;left:14px;top:14px;background:linear-gradient(135deg,var(--red,#9E1B22),var(--red-d,#6E0E13));color:#FFE9B0;font-weight:800;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;padding:6px 12px;border-radius:100px;box-shadow:0 6px 14px rgba(110,14,19,.35)}
+.nsl-body{padding:20px 24px 24px;display:flex;flex-direction:column;gap:10px;flex:1}
+.nsl-title{font-weight:900;font-size:1.42rem;color:var(--red-d,#6E0E13);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.nsl-exc{color:var(--ink2,#4E3A22);font-size:1rem;line-height:1.65;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.nsl-more{margin-top:auto;color:var(--gold-d,#8F6710);font-weight:800;font-size:.95rem}
+.nsl-arrow{position:absolute;top:calc(10px + var(--nsl-cover-h,382px)/2);transform:translateY(-50%);z-index:3;width:50px;height:50px;border-radius:50%;border:0;cursor:pointer;
+  background:rgba(255,253,247,.94);color:var(--red-d,#6E0E13);font-size:1.5rem;font-weight:900;line-height:1;display:grid;place-items:center;
+  box-shadow:0 0 0 1.5px var(--gold-l,#EAC85A),0 10px 24px -8px rgba(70,40,10,.55);transition:transform .2s,background .2s}
+.nsl-arrow:hover{background:linear-gradient(135deg,var(--red,#9E1B22),var(--red-d,#6E0E13));color:#FFE9B0;transform:translateY(-50%) scale(1.08)}
+.nsl-prev{left:-8px}.nsl-next{right:-8px}
+@media(max-width:720px){.nsl-view{-webkit-mask-image:none;mask-image:none}.nsl-card{border-radius:16px}.nsl-title{font-size:1.15rem}.nsl-exc{font-size:.92rem;-webkit-line-clamp:2}.nsl-arrow{width:40px;height:40px;font-size:1.2rem}.nsl-prev{left:2px}.nsl-next{right:2px}.nsl-track{gap:16px}}
 .ncard{background:var(--card,#FFFDF7);border-radius:16px;overflow:hidden;cursor:pointer;
   box-shadow:0 0 0 1px var(--gold-l,#EAC85A),0 16px 34px -22px rgba(70,40,10,.5);transition:transform .3s,box-shadow .3s;display:flex;flex-direction:column}
 .ncard:hover{transform:translateY(-4px);box-shadow:0 0 0 1px var(--gold,#C6971E),0 26px 50px -20px rgba(70,40,10,.6)}
@@ -1533,6 +1557,11 @@ body>section,body>header,body>footer{position:relative;z-index:1}
 
 <section id="sec-news"><div class="wrap">
   <div class="sec-h reveal newshead"><span class="eyebrow">Cập nhật mới nhất</span><h2>Tin tức &amp; Hoạt động</h2><p>Chia sẻ, tập huấn, sự kiện ứng dụng AI &amp; chuyển đổi số — cập nhật realtime từ Ban quản trị.</p></div>
+  <div class="nslider" id="nsl" hidden>
+    <button class="nsl-arrow nsl-prev" id="nsl-prev" type="button" aria-label="Bài trước">&#10094;</button>
+    <div class="nsl-view" id="nsl-view"><div class="nsl-track" id="nsl-track"></div></div>
+    <button class="nsl-arrow nsl-next" id="nsl-next" type="button" aria-label="Bài tiếp theo">&#10095;</button>
+  </div>
   <div class="newsgrid" id="sb-news"></div>
 </div></section>
 
@@ -1562,6 +1591,7 @@ body>section,body>header,body>footer{position:relative;z-index:1}
       .then(function(res){var d=(res&&res.data)||[];if(res&&res.error)return;DATA=d;
         document.getElementById('sec-news').style.display=d.length?'':'none';
         box.innerHTML=d.map(card).join('');
+        try{buildSlider(d);}catch(e){console.warn('slider',e);}
       });
   }
   function attHTML(atts){
@@ -1582,6 +1612,70 @@ body>section,body>header,body>footer{position:relative;z-index:1}
   }
   function close(){modal.classList.remove('open');document.body.style.overflow='';}
   box.addEventListener('click',function(e){var c=e.target.closest('.ncard');if(!c)return;var n=DATA.filter(function(x){return String(x.id)===c.getAttribute('data-id');})[0];if(n)open(n);});
+  /* ===== SLIDE TIN NỔI BẬT: chạy vô hạn phải → trái, kéo bằng chuột/ngón tay, mũi tên 2 bên ===== */
+  var SL={el:document.getElementById('nsl'),view:document.getElementById('nsl-view'),track:document.getElementById('nsl-track'),
+    off:0,setW:0,step:0,speed:42,paused:false,hover:false,drag:null,moved:false,tween:null,last:0,n:0};
+  var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function slCard(n,i){
+    var cov=n.cover_url?('<img loading="'+(i<3?'eager':'lazy')+'" draggable="false" src="'+esc(n.cover_url)+'" alt="">'):('<div class="nsl-ph">'+esc(n.title||'')+'</div>');
+    return '<article class="nsl-card" data-id="'+n.id+'"><div class="nsl-cover">'+cov+(i===0?'<span class="nsl-badge">Mới nhất</span>':'')+'</div>'+
+      '<div class="nsl-body"><div class="nsl-title">'+esc(n.title||'(Chưa có tiêu đề)')+'</div>'+(n.excerpt?'<div class="nsl-exc">'+esc(n.excerpt)+'</div>':'')+
+      '<span class="nsl-more">Xem chi tiết ➜</span></div></article>';
+  }
+  function slCardW(){ // = 2 lần thẻ tin ở lưới bên dưới, không vượt khung nhìn
+    var g=box.querySelector('.ncard'),gw=g?g.getBoundingClientRect().width:340,vw=SL.view.clientWidth||960;
+    return vw<720?Math.max(240,vw-28):Math.max(260,Math.min(Math.round(gw*2),vw-80));
+  }
+  function buildSlider(d){
+    if(!d||!d.length){SL.el.hidden=true;SL.track.innerHTML='';SL.n=0;return;}
+    SL.el.hidden=false;SL.data=d;
+    var w=slCardW(),gap=parseFloat(getComputedStyle(SL.track).columnGap||getComputedStyle(SL.track).gap)||24;
+    var one=d.map(slCard).join(''),setW=d.length*(w+gap),vw=SL.view.clientWidth||960,copies=Math.max(3,Math.ceil((vw*2)/setW)+2);
+    var html='';for(var k=0;k<copies;k++)html+=one;
+    var ratio=SL.setW?(SL.off/SL.setW):0;
+    SL.track.innerHTML=html;SL.n=d.length;
+    SL.track.querySelectorAll('.nsl-card').forEach(function(c){c.style.width=w+'px';});
+    SL.setW=setW;SL.step=w+gap;SL.off=((ratio%1)+1)%1*setW;
+    SL.el.style.setProperty('--nsl-cover-h',Math.round(w*9/16)+'px');
+    slApply();
+  }
+  function slNorm(){if(!SL.setW)return;while(SL.off>=SL.setW)SL.off-=SL.setW;while(SL.off<0)SL.off+=SL.setW;}
+  function slApply(){slNorm();SL.track.style.transform='translate3d('+(-SL.off).toFixed(2)+'px,0,0)';}
+  function slFrame(t){
+    var dt=SL.last?Math.min(64,t-SL.last):16;SL.last=t;
+    if(SL.n&&!SL.drag){
+      if(SL.tween){var p=Math.min(1,(t-SL.tween.t0)/SL.tween.dur),e=1-Math.pow(1-p,3);SL.off=SL.tween.from+(SL.tween.to-SL.tween.from)*e;if(p>=1){SL.off=SL.tween.to;SL.tween=null;}slApply();}
+      else if(!reduce&&!SL.hover&&!SL.paused&&!document.hidden){SL.off+=SL.speed*dt/1000;slApply();}
+    }
+    requestAnimationFrame(slFrame);
+  }
+  function slGo(dir){ // dir=1: bài tiếp theo (trượt sang trái) · dir=-1: bài trước
+    if(!SL.step)return;var cur=SL.tween?SL.tween.to:SL.off;
+    var base=Math.round(cur/SL.step)*SL.step;var target=base+dir*SL.step;
+    if(Math.abs(target-cur)<SL.step*0.25)target+=dir*SL.step;
+    SL.tween={from:SL.off,to:target,t0:performance.now(),dur:520};
+  }
+  document.getElementById('nsl-prev').addEventListener('click',function(e){e.stopPropagation();slGo(-1);});
+  document.getElementById('nsl-next').addEventListener('click',function(e){e.stopPropagation();slGo(1);});
+  SL.view.addEventListener('mouseenter',function(){SL.hover=true;});
+  SL.view.addEventListener('mouseleave',function(){SL.hover=false;});
+  // Kéo bằng chuột / ngón tay
+  SL.view.addEventListener('pointerdown',function(e){if(e.button>0)return;SL.tween=null;SL.drag={x:e.clientX,off:SL.off,id:e.pointerId,vx:0,lx:e.clientX,lt:performance.now()};SL.moved=false;});
+  window.addEventListener('pointermove',function(e){var D=SL.drag;if(!D||e.pointerId!==D.id)return;var dx=e.clientX-D.x;
+    if(!SL.moved&&Math.abs(dx)>6){SL.moved=true;SL.view.classList.add('drag');try{SL.view.setPointerCapture(D.id);}catch(_){}}
+    if(SL.moved){var now=performance.now();D.vx=(e.clientX-D.lx)/Math.max(1,now-D.lt);D.lx=e.clientX;D.lt=now;SL.off=D.off-dx;slApply();}});
+  function slEnd(e){var D=SL.drag;if(!D||(e&&e.pointerId!==D.id))return;SL.drag=null;SL.view.classList.remove('drag');
+    if(SL.moved&&SL.step){var moved=SL.off-D.off,pos=(SL.off-D.vx*200)/SL.step;var t=(Math.abs(moved)>60?(moved>0?Math.ceil(pos):Math.floor(pos)):Math.round(pos))*SL.step;SL.tween={from:SL.off,to:t,t0:performance.now(),dur:480};}}
+  window.addEventListener('pointerup',slEnd);window.addEventListener('pointercancel',slEnd);
+  SL.view.addEventListener('click',function(e){if(SL.moved){e.preventDefault();e.stopPropagation();SL.moved=false;return;}
+    var c=e.target.closest('.nsl-card');if(!c)return;var n=(SL.data||[]).filter(function(x){return String(x.id)===c.getAttribute('data-id');})[0];if(n)open(n);},true);
+  SL.view.addEventListener('dragstart',function(e){e.preventDefault();});
+  // Phím mũi tên khi đang trỏ vào slide
+  SL.el.addEventListener('keydown',function(e){if(e.key==='ArrowLeft')slGo(-1);else if(e.key==='ArrowRight')slGo(1);});
+  var _rz;window.addEventListener('resize',function(){clearTimeout(_rz);_rz=setTimeout(function(){if(SL.data)buildSlider(SL.data);},180);});
+  // Mở bài viết → tạm dừng slide; đóng → chạy tiếp
+  new MutationObserver(function(){SL.paused=modal.classList.contains('open');}).observe(modal,{attributes:true,attributeFilter:['class']});
+  requestAnimationFrame(slFrame);
   document.getElementById('nm-close').onclick=close;
   modal.addEventListener('click',function(e){if(e.target===modal)close();});
   document.addEventListener('keydown',function(e){if(e.key==='Escape')close();});

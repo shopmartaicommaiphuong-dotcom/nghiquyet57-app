@@ -274,7 +274,7 @@ async function addNewsCover(file){if(!file)return;busy(true);try{var u=await upl
 async function addNewsAtts(files){busy(true);try{for(var i=0;i<files.length;i++){var u=await uploadFile(files[i],'news');newsAtts.push({name:files[i].name,url:u.url,path:u.path,kind:attKind(files[i])});}renderNewsAtts();}catch(e){toast('Lỗi: '+(e.message||e),'err');}busy(false);}
 function openNews(n){curNews=n||null;newsAtts=(n&&Array.isArray(n.attachments))?n.attachments.slice():[];newsCover=(n&&n.cover_url)?{url:n.cover_url,path:n.cover_path||''}:null;
   $('#nw-title').value=n?(n.title||''):'';$('#nw-excerpt').value=n?(n.excerpt||''):'';$('#nw-tags').value=n?(n.tags||''):'';
-  $('#nw-order').value=n?(n.display_order||0):(NEWS.length?Math.max.apply(null,NEWS.map(function(x){return x.display_order||0;}))+1:1);
+  $('#nw-order').value=n?(n.display_order||0):(NEWS.length?Math.min.apply(null,NEWS.map(function(x){return x.display_order||0;}))-1:1); // bài mới lên đầu
   $('#nw-active').checked=n?!!n.active:true;
   ensureQuill();quill.root.innerHTML=(n&&n.content)||'';
   renderNewsCover();renderNewsAtts();$('#newsModal').classList.add('open');}
