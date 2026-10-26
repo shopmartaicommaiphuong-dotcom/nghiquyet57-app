@@ -1498,8 +1498,7 @@ body>section,body>header,body>footer{position:relative;z-index:1}
 @media(max-width:720px){.newsgrid{grid-template-columns:1fr}}
 /* ===== SLIDE TIN NỔI BẬT — trượt vô hạn phải → trái, kéo được, có mũi tên ===== */
 .nslider{position:relative;margin:0 0 34px;user-select:none;-webkit-user-select:none}
-.nsl-view{overflow:hidden;padding:10px 0 36px;margin-bottom:-18px;touch-action:pan-y;cursor:grab;
-  -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 34px,#000 calc(100% - 34px),transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 34px,#000 calc(100% - 34px),transparent 100%)}
+.nsl-view{overflow:hidden;padding:10px 0 36px;margin-bottom:-18px;touch-action:pan-y;cursor:grab}
 .nsl-view.drag{cursor:grabbing}
 .nsl-track{display:flex;gap:24px;will-change:transform}
 .nsl-card{flex:0 0 auto;width:680px;background:var(--card,#FFFDF7);border-radius:20px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;
@@ -1518,8 +1517,8 @@ body>section,body>header,body>footer{position:relative;z-index:1}
   background:rgba(255,253,247,.94);color:var(--red-d,#6E0E13);font-size:1.5rem;font-weight:900;line-height:1;display:grid;place-items:center;
   box-shadow:0 0 0 1.5px var(--gold-l,#EAC85A),0 10px 24px -8px rgba(70,40,10,.55);transition:transform .2s,background .2s}
 .nsl-arrow:hover{background:linear-gradient(135deg,var(--red,#9E1B22),var(--red-d,#6E0E13));color:#FFE9B0;transform:translateY(-50%) scale(1.08)}
-.nsl-prev{left:-8px}.nsl-next{right:-8px}
-@media(max-width:720px){.nsl-view{-webkit-mask-image:none;mask-image:none}.nsl-card{border-radius:16px}.nsl-title{font-size:1.15rem}.nsl-exc{font-size:.92rem;-webkit-line-clamp:2}.nsl-arrow{width:40px;height:40px;font-size:1.2rem}.nsl-prev{left:2px}.nsl-next{right:2px}.nsl-track{gap:16px}}
+.nsl-prev{left:-25px}.nsl-next{right:-25px}
+@media(max-width:720px){.nsl-card{border-radius:16px}.nsl-title{font-size:1.15rem}.nsl-exc{font-size:.92rem;-webkit-line-clamp:2}.nsl-arrow{width:40px;height:40px;font-size:1.2rem}.nsl-prev{left:6px}.nsl-next{right:6px}.nsl-track{gap:16px}}
 .ncard{background:var(--card,#FFFDF7);border-radius:16px;overflow:hidden;cursor:pointer;
   box-shadow:0 0 0 1px var(--gold-l,#EAC85A),0 16px 34px -22px rgba(70,40,10,.5);transition:transform .3s,box-shadow .3s;display:flex;flex-direction:column}
 .ncard:hover{transform:translateY(-4px);box-shadow:0 0 0 1px var(--gold,#C6971E),0 26px 50px -20px rgba(70,40,10,.6)}
@@ -1614,7 +1613,7 @@ body>section,body>header,body>footer{position:relative;z-index:1}
   box.addEventListener('click',function(e){var c=e.target.closest('.ncard');if(!c)return;var n=DATA.filter(function(x){return String(x.id)===c.getAttribute('data-id');})[0];if(n)open(n);});
   /* ===== SLIDE TIN NỔI BẬT: chạy vô hạn phải → trái, kéo bằng chuột/ngón tay, mũi tên 2 bên ===== */
   var SL={el:document.getElementById('nsl'),view:document.getElementById('nsl-view'),track:document.getElementById('nsl-track'),
-    off:0,setW:0,step:0,speed:42,paused:false,hover:false,drag:null,moved:false,tween:null,last:0,n:0};
+    off:0,setW:0,step:0,every:4000,nextAt:0,paused:false,hover:false,drag:null,moved:false,tween:null,last:0,n:0};
   var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   function slCard(n,i){
     var cov=n.cover_url?('<img loading="'+(i<3?'eager':'lazy')+'" draggable="false" src="'+esc(n.cover_url)+'" alt="">'):('<div class="nsl-ph">'+esc(n.title||'')+'</div>');
@@ -1622,20 +1621,20 @@ body>section,body>header,body>footer{position:relative;z-index:1}
       '<div class="nsl-body"><div class="nsl-title">'+esc(n.title||'(Chưa có tiêu đề)')+'</div>'+(n.excerpt?'<div class="nsl-exc">'+esc(n.excerpt)+'</div>':'')+
       '<span class="nsl-more">Xem chi tiết ➜</span></div></article>';
   }
-  function slCardW(){ // = 2 lần thẻ tin ở lưới bên dưới, không vượt khung nhìn
-    var g=box.querySelector('.ncard'),gw=g?g.getBoundingClientRect().width:340,vw=SL.view.clientWidth||960;
-    return vw<720?Math.max(240,vw-28):Math.max(260,Math.min(Math.round(gw*2),vw-80));
+  function slCardW(gap){ // vừa khít 2 tin trên bề rộng khung (điện thoại nhỏ: 1 tin)
+    var vw=SL.view.clientWidth||960;
+    return vw>=640?(vw-gap)/2:vw;
   }
   function buildSlider(d){
     if(!d||!d.length){SL.el.hidden=true;SL.track.innerHTML='';SL.n=0;return;}
     SL.el.hidden=false;SL.data=d;
-    var w=slCardW(),gap=parseFloat(getComputedStyle(SL.track).columnGap||getComputedStyle(SL.track).gap)||24;
+    var gap=parseFloat(getComputedStyle(SL.track).columnGap||getComputedStyle(SL.track).gap)||24,w=slCardW(gap);
     var one=d.map(slCard).join(''),setW=d.length*(w+gap),vw=SL.view.clientWidth||960,copies=Math.max(3,Math.ceil((vw*2)/setW)+2);
     var html='';for(var k=0;k<copies;k++)html+=one;
     var ratio=SL.setW?(SL.off/SL.setW):0;
     SL.track.innerHTML=html;SL.n=d.length;
-    SL.track.querySelectorAll('.nsl-card').forEach(function(c){c.style.width=w+'px';});
-    SL.setW=setW;SL.step=w+gap;SL.off=((ratio%1)+1)%1*setW;
+    SL.track.querySelectorAll('.nsl-card').forEach(function(c){c.style.width=w.toFixed(2)+'px';});
+    SL.setW=setW;SL.step=w+gap;SL.off=Math.round((((ratio%1)+1)%1*setW)/SL.step)*SL.step;SL.tween=null;
     SL.el.style.setProperty('--nsl-cover-h',Math.round(w*9/16)+'px');
     slApply();
   }
@@ -1645,27 +1644,27 @@ body>section,body>header,body>footer{position:relative;z-index:1}
     var dt=SL.last?Math.min(64,t-SL.last):16;SL.last=t;
     if(SL.n&&!SL.drag){
       if(SL.tween){var p=Math.min(1,(t-SL.tween.t0)/SL.tween.dur),e=1-Math.pow(1-p,3);SL.off=SL.tween.from+(SL.tween.to-SL.tween.from)*e;if(p>=1){SL.off=SL.tween.to;SL.tween=null;}slApply();}
-      else if(!reduce&&!SL.hover&&!SL.paused&&!document.hidden){SL.off+=SL.speed*dt/1000;slApply();}
+      // Tự động: cứ mỗi 4 giây trượt 1 tin từ phải qua trái
+      else if(SL.paused||document.hidden||reduce||SL.n<2){SL.nextAt=t+SL.every;}
+      else{if(!SL.nextAt)SL.nextAt=t+SL.every;if(t>=SL.nextAt)slGo(1,true);}
     }
     requestAnimationFrame(slFrame);
   }
-  function slGo(dir){ // dir=1: bài tiếp theo (trượt sang trái) · dir=-1: bài trước
-    if(!SL.step)return;var cur=SL.tween?SL.tween.to:SL.off;
-    var base=Math.round(cur/SL.step)*SL.step;var target=base+dir*SL.step;
-    if(Math.abs(target-cur)<SL.step*0.25)target+=dir*SL.step;
-    SL.tween={from:SL.off,to:target,t0:performance.now(),dur:520};
+  function slGo(dir,auto){ // dir=1: tin tiếp theo (trượt từ phải qua trái) · dir=-1: tin trước (trượt sang phải)
+    if(!SL.step)return;var cur=SL.tween?SL.tween.to:SL.off,now=performance.now();
+    var target=Math.round(cur/SL.step)*SL.step+dir*SL.step,dur=auto?750:480;
+    SL.tween={from:SL.off,to:target,t0:now,dur:dur};
+    SL.nextAt=now+dur+(auto?SL.every:SL.every+3000); // người xem vừa bấm → chờ lâu hơn rồi mới tự chạy tiếp
   }
   document.getElementById('nsl-prev').addEventListener('click',function(e){e.stopPropagation();slGo(-1);});
   document.getElementById('nsl-next').addEventListener('click',function(e){e.stopPropagation();slGo(1);});
-  SL.view.addEventListener('mouseenter',function(){SL.hover=true;});
-  SL.view.addEventListener('mouseleave',function(){SL.hover=false;});
   // Kéo bằng chuột / ngón tay
   SL.view.addEventListener('pointerdown',function(e){if(e.button>0)return;SL.tween=null;SL.drag={x:e.clientX,off:SL.off,id:e.pointerId,vx:0,lx:e.clientX,lt:performance.now()};SL.moved=false;});
   window.addEventListener('pointermove',function(e){var D=SL.drag;if(!D||e.pointerId!==D.id)return;var dx=e.clientX-D.x;
     if(!SL.moved&&Math.abs(dx)>6){SL.moved=true;SL.view.classList.add('drag');try{SL.view.setPointerCapture(D.id);}catch(_){}}
     if(SL.moved){var now=performance.now();D.vx=(e.clientX-D.lx)/Math.max(1,now-D.lt);D.lx=e.clientX;D.lt=now;SL.off=D.off-dx;slApply();}});
   function slEnd(e){var D=SL.drag;if(!D||(e&&e.pointerId!==D.id))return;SL.drag=null;SL.view.classList.remove('drag');
-    if(SL.moved&&SL.step){var moved=SL.off-D.off,pos=(SL.off-D.vx*200)/SL.step;var t=(Math.abs(moved)>60?(moved>0?Math.ceil(pos):Math.floor(pos)):Math.round(pos))*SL.step;SL.tween={from:SL.off,to:t,t0:performance.now(),dur:480};}}
+    if(SL.moved&&SL.step){var moved=SL.off-D.off,pos=(SL.off-D.vx*200)/SL.step;var t=(Math.abs(moved)>60?(moved>0?Math.ceil(pos):Math.floor(pos)):Math.round(pos))*SL.step;SL.tween={from:SL.off,to:t,t0:performance.now(),dur:480};}SL.nextAt=performance.now()+SL.every+3000;}
   window.addEventListener('pointerup',slEnd);window.addEventListener('pointercancel',slEnd);
   SL.view.addEventListener('click',function(e){if(SL.moved){e.preventDefault();e.stopPropagation();SL.moved=false;return;}
     var c=e.target.closest('.nsl-card');if(!c)return;var n=(SL.data||[]).filter(function(x){return String(x.id)===c.getAttribute('data-id');})[0];if(n)open(n);},true);
