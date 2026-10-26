@@ -1,11 +1,11 @@
 {
   "name": "nghiquyet57-app",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "private": true,
   "description": "So tay Nghi quyet 57 - web tinh + serverless: quan ly Bien tap vien, lay bai tu link",
   "dependencies": {
-    "@mozilla/readability": "^0.6.0",
+    "@mozilla/readability": "0.6.0",
     "@supabase/supabase-js": "^2.45.4",
-    "linkedom": "^0.18.14"
+    "linkedom": "0.18.5"
   }
 }
