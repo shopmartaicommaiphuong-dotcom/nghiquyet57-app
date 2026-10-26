@@ -1645,7 +1645,7 @@ body>section,body>header,body>footer{position:relative;z-index:1}
     if(SL.n&&!SL.drag){
       if(SL.tween){var p=Math.min(1,(t-SL.tween.t0)/SL.tween.dur),e=1-Math.pow(1-p,3);SL.off=SL.tween.from+(SL.tween.to-SL.tween.from)*e;if(p>=1){SL.off=SL.tween.to;SL.tween=null;}slApply();}
       // Tự động: cứ mỗi 4 giây trượt 1 tin từ phải qua trái
-      else if(SL.paused||document.hidden||reduce||SL.n<2){SL.nextAt=t+SL.every;}
+      else if(SL.paused||document.hidden||SL.n<2){SL.nextAt=t+SL.every;} // luôn tự chạy, kể cả khi Windows tắt hiệu ứng chuyển động
       else{if(!SL.nextAt)SL.nextAt=t+SL.every;if(t>=SL.nextAt)slGo(1,true);}
     }
     requestAnimationFrame(slFrame);
