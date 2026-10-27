@@ -155,6 +155,17 @@ textarea.inp{resize:vertical;min-height:60px;line-height:1.45}
 .fdz span{color:#8a6d1f;font-size:12.2px}
 .fdz-opt{display:flex;gap:7px;align-items:center;margin-top:8px;font-size:12.6px;color:#5a4300;cursor:pointer;user-select:none}
 #busyMsg{position:absolute;left:0;right:0;top:calc(50% + 42px);text-align:center;font-weight:700;color:#132038;font-size:14px;padding:0 16px}
+/* ===== DÁN BÀI VIẾT (Zalo, Facebook, trang bắt đăng nhập) ===== */
+.pstbox{margin-top:12px;border:1.5px solid #9fc3ef;background:linear-gradient(135deg,#f4f9ff,#eef5ff);border-radius:14px;padding:12px 14px;transition:box-shadow .3s,border-color .3s}
+.pstbox.flash{border-color:#2f7be6;box-shadow:0 0 0 4px rgba(47,123,230,.22)}
+.pstbox .pst-h{font-size:12.8px;color:#1d3557;line-height:1.5;margin-bottom:8px}
+.pstbox .pst-h b{color:#14365f;font-size:13.4px}
+.pst-area{min-height:96px;max-height:340px;overflow:auto;background:#fff;border:2px dashed #b9cde8;border-radius:12px;padding:10px 12px;font-size:13.5px;line-height:1.55;color:#132038;outline:0;cursor:text;word-break:break-word;margin-bottom:8px}
+.pst-area:focus{border-color:#2f7be6;border-style:solid}
+.pst-area:empty:before{content:attr(data-ph);color:#7c8aa5}
+.pst-area img{max-width:220px;max-height:140px;border-radius:8px;margin:4px;vertical-align:middle}
+.pst-area *{max-width:100%!important;font-size:inherit!important}
+.pst-cnt{font-size:12.2px;color:#5b6b86}
 /* ===== Ô THỜI GIAN CHUYỂN SLIDE TRANG CHỦ ===== */
 .spdbox{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:14px 0 0;padding:12px 16px;border-radius:14px;background:linear-gradient(135deg,#eef6ff,#f6fbff);border:1.5px solid #c9dcf5;font-size:13px;color:#1d3557}
 .spdbox b{color:#14365f}
@@ -265,7 +276,17 @@ textarea.inp{resize:vertical;min-height:60px;line-height:1.45}
             <button class="btn btn-sm btn-gold" id="impPub" type="button">⚡ Lấy &amp; đăng ngay</button>
             <button class="btn btn-sm mini" id="impEdit" type="button">📝 Lấy &amp; xem trước</button>
           </div>
-                    <div class="fdz" id="fileDz" role="button" tabindex="0">
+                    <div class="pstbox" id="pstBox">
+            <div class="pst-h">📋 <b>Dán bài viết</b> — dành cho bài trên <b>Zalo, Facebook</b> hoặc trang bắt đăng nhập (máy chủ không tự đọc được): mở bài → chọn toàn bộ (Ctrl+A, hoặc giữ ngón tay → “Chọn tất cả”) → Sao chép → bấm vào ô dưới → Dán (Ctrl+V). Chữ và ảnh tự về kho của mình.</div>
+            <div class="pst-area" id="pstArea" contenteditable="true" data-ph="Bấm vào đây rồi dán (Ctrl+V) nội dung bài viết — tiêu đề, chữ, ảnh…"></div>
+            <div class="imp-r">
+              <button class="btn btn-sm btn-gold" id="pstPub" type="button">⚡ Đăng ngay</button>
+              <button class="btn btn-sm mini" id="pstEdit" type="button">📝 Xem trước</button>
+              <button class="btn btn-sm mini" id="pstClear" type="button">🗑️ Xoá ô</button>
+              <span class="pst-cnt" id="pstCnt"></span>
+            </div>
+          </div>
+          <div class="fdz" id="fileDz" role="button" tabindex="0">
             <div class="fdz-ic">📄</div>
             <div><b>Kéo thả file Word (.docx) hoặc PDF vào đây</b> — hoặc bấm để chọn file. Thả nhiều file cùng lúc = đăng nhiều bài.<br><span>Tiêu đề, chữ, đề mục, danh sách và <b>toàn bộ ảnh</b> trong file được chuyển thành bài viết; file gốc được đính kèm cuối bài để người đọc tải về.</span></div>
           </div>
@@ -871,22 +892,24 @@ function bindNewsModal(){
 if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',bindNewsModal);}else{bindNewsModal();}
 /* ============================================================ LẤY BÀI TỪ LINK — dán link là có bài (chữ + ảnh về kho của mình) ============================================================ */
 function impStatus(id,cls,msg){var st=$('#'+id);if(st){st.className='imp-st '+(cls||'');st.textContent=msg||'';}}
-async function importArticle(url,stId){
+async function importArticle(url,stId,payload){
   url=(url||'').trim();
-  if(!url){toast('Dán link bài viết vào trước đã','err');return null;}
+  if(!url&&!payload){toast('Dán link bài viết vào trước đã','err');return null;}
   var ses=(await sb.auth.getSession()).data.session;
   if(!ses){toast('Phiên đăng nhập đã hết — vui lòng đăng nhập lại','err');return null;}
   impStatus(stId,'run','⏳ Đang đọc bài và tải ảnh về kho… (khoảng 5–40 giây tuỳ số ảnh)');
   busy(true);
   try{
-    var r=await fetch('/api/import-article',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+ses.access_token},body:JSON.stringify({url:url})});
+    var r=await fetch('/api/import-article',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+ses.access_token},body:JSON.stringify(payload||{url:url})});
     var txt=await r.text(),j=null;
     try{j=JSON.parse(txt);}catch(e){throw new Error(r.status===404?'Máy chủ chưa có chức năng lấy bài — cần deploy bản mới.':(r.status===504?'Trang gốc phản hồi quá chậm, anh/chị thử lại sau ít phút.':'Máy chủ báo lỗi '+r.status));}
-    if(!r.ok||!j||!j.ok)throw new Error((j&&j.error)||('Lỗi '+r.status));
+    if(!r.ok||!j||!j.ok){var er=new Error((j&&j.error)||('Lỗi '+r.status));er.code=j&&j.code;throw er;}
     var im=j.images||{};
     impStatus(stId,'ok','✓ Đã lấy: “'+(j.title||'(không tiêu đề)')+'” · ảnh lưu về kho: '+(im.saved||0)+'/'+(im.total||0)+(im.failed?(' ('+im.failed+' ảnh giữ link gốc)'):''));
     return j;
-  }catch(e){impStatus(stId,'err','✗ '+(e&&e.message?e.message:e));toast('Không lấy được bài: '+(e&&e.message?e.message:e),'err');return null;}
+  }catch(e){impStatus(stId,'err','✗ '+(e&&e.message?e.message:e));
+    if(e&&e.code==='login_wall'){toast('Bài này bị khoá sau đăng nhập — dùng ô “📋 Dán bài viết”','err');if(typeof pstFocus==='function')pstFocus(url);}
+    else toast('Không lấy được bài: '+(e&&e.message?e.message:e),'err');return null;}
   finally{busy(false);}
 }
 function impTopOrder(){return NEWS.length?Math.min.apply(null,NEWS.map(function(x){return x.display_order||0;}))-1:1;}
@@ -903,17 +926,20 @@ function impFill(j,isNew){
   $('#nw-active').checked=true;
   var b=$('#newsModal .nwbody');if(b)b.scrollTop=0;
 }
-async function impPublishNow(){
-  var inp=$('#impUrl');var j=await importArticle(inp.value,'impSt');if(!j)return;
+async function impInsert(j,stId){
   var d=impDup(j);
-  if(d&&!confirm('Bài “'+(d.title||'')+'” có vẻ đã được đăng rồi.\nVẫn đăng thêm một bản nữa?')){impStatus('impSt','','Đã huỷ — không đăng trùng.');return;}
+  if(d&&!confirm('Bài “'+(d.title||'')+'” có vẻ đã được đăng rồi.\nVẫn đăng thêm một bản nữa?')){impStatus(stId,'','Đã huỷ — không đăng trùng.');return false;}
   var data={title:j.title||'(Chưa có tiêu đề)',excerpt:j.excerpt||'',content:j.content||'',cover_url:j.cover_url||'',cover_path:j.cover_path||'',attachments:[],tags:'',display_order:impTopOrder(),active:true};
   busy(true);
   try{var r=await sb.from('sotay_news').insert(data);
-    if(r.error){toast('Lỗi đăng bài: '+r.error.message,'err');impStatus('impSt','err','✗ Lỗi đăng bài: '+r.error.message);}
-    else{toast('Đã đăng lên trang chủ ✓','ok');impStatus('impSt','ok','✓ Đã đăng lên đầu mục Tin tức trang chủ: “'+data.title+'”. Bấm “Sửa” ở danh sách bên dưới nếu muốn chỉnh.');inp.value='';loadNews();}
-  }catch(e){toast('Lỗi đăng bài: '+(e&&e.message?e.message:e),'err');}
+    if(r.error){toast('Lỗi đăng bài: '+r.error.message,'err');impStatus(stId,'err','✗ Lỗi đăng bài: '+r.error.message);return false;}
+    toast('Đã đăng lên trang chủ ✓','ok');impStatus(stId,'ok','✓ Đã đăng lên đầu mục Tin tức trang chủ: “'+data.title+'”. Bấm “Sửa” ở danh sách bên dưới nếu muốn chỉnh.');loadNews();return true;
+  }catch(e){toast('Lỗi đăng bài: '+(e&&e.message?e.message:e),'err');return false;}
   finally{busy(false);}
+}
+async function impPublishNow(){
+  var inp=$('#impUrl');var j=await importArticle(inp.value,'impSt');if(!j)return;
+  if(await impInsert(j,'impSt'))inp.value='';
 }
 async function impPreview(){
   var inp=$('#impUrl');var j=await importArticle(inp.value,'impSt');if(!j)return;
@@ -1204,6 +1230,42 @@ async function spdSave(){
 }
 (function(){var b=$('#spdSave');if(b)b.onclick=spdSave;var i=$('#spdSec');if(i)i.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();spdSave();}});})();
 var _loadNewsSpd=loadNews;loadNews=async function(){if(!spdLoaded&&sb){spdLoaded=true;spdLoad();}return _loadNewsSpd.apply(this,arguments);};
+/* ============================================================ DÁN BÀI VIẾT — cho Zalo, Facebook, trang bắt đăng nhập ============================================================ */
+var pstSource='';
+function pstCount(){var a=$('#pstArea'),c=$('#pstCnt');if(!a||!c)return;var t=(a.innerText||'').replace(/\s+/g,' ').trim(),n=a.querySelectorAll('img').length;c.textContent=(t||n)?('Đã dán: '+t.split(' ').filter(Boolean).length+' chữ · '+n+' ảnh'+(pstSource?' · nguồn: '+pstSource.replace(/^https?:\/\//,'').slice(0,40):'')):'';}
+function pstFocus(url){var b=$('#pstBox');if(!b)return;if(url)pstSource=url;b.classList.add('flash');b.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(function(){b.classList.remove('flash');},4000);var a=$('#pstArea');if(a)setTimeout(function(){a.focus();},400);pstCount();}
+async function pstUploadInline(box){ // ảnh dán trực tiếp (ảnh chụp màn hình, data:, blob:) → tải lên kho ngay trên trình duyệt
+  var imgs=Array.from(box.querySelectorAll('img')).filter(function(im){return /^(data:image|blob:)/.test(im.getAttribute('src')||'');});
+  for(var i=0;i<imgs.length;i++){try{var bl=await fetch(imgs[i].getAttribute('src')).then(function(r){return r.blob();});
+    if(!bl||bl.size<300){imgs[i].remove();continue;}
+    var ext=((bl.type||'image/png').split('/')[1]||'png').replace('jpeg','jpg');
+    var u=await uploadFile(new File([bl],'dan_'+(i+1)+'.'+ext,{type:bl.type||'image/png'}),'news');imgs[i].setAttribute('src',u.url);}catch(e){imgs[i].remove();}}
+}
+async function pstGo(publish){
+  var a=$('#pstArea');if(!a)return;
+  var box=a.cloneNode(true);
+  if(!(box.innerText||box.textContent||'').trim()&&!box.querySelector('img')){toast('Dán nội dung bài viết vào ô trước đã','err');a.focus();return;}
+  busy(true);try{fiProg('Đang tải ảnh dán trực tiếp lên kho…');await pstUploadInline(box);}finally{fiProg('');busy(false);}
+  var j=await importArticle('(nội dung dán)','impSt',{html:box.innerHTML,text:a.innerText||'',source_url:pstSource||''});
+  if(!j)return;
+  if(publish){var ok=await impInsert(j,'impSt');if(ok){a.innerHTML='';pstSource='';pstCount();}}
+  else{var d=impDup(j);if(d)toast('Lưu ý: có vẻ bài này đã đăng rồi (“'+(d.title||'')+'”)','err');
+    openNews(null);impFill(j,true);impStatus('nw-impSt','ok','✓ Đã chuyển nội dung dán thành bài viết — xem lại rồi bấm “Lưu bài viết”.');a.innerHTML='';pstSource='';pstCount();}
+}
+function bindPaste(){
+  var a=$('#pstArea');if(!a)return;
+  a.addEventListener('paste',function(e){var cd=e.clipboardData;if(!cd)return;
+    var hasHtml=(cd.types&&Array.prototype.indexOf.call(cd.types,'text/html')>=0),files=[];
+    for(var i=0;i<(cd.items||[]).length;i++){var it=cd.items[i];if(it.kind==='file'&&/^image\//.test(it.type)){var f=it.getAsFile();if(f)files.push(f);}}
+    if(files.length&&!hasHtml){e.preventDefault();(async function(){busy(true);try{for(var k=0;k<files.length;k++){fiProg('Đang tải ảnh '+(k+1)+'/'+files.length+'…');var u=await uploadFile(files[k],'news');document.execCommand('insertHTML',false,'<p><img src="'+esc(u.url)+'"></p>');}}catch(er){toast('Lỗi tải ảnh: '+(er.message||er),'err');}finally{fiProg('');busy(false);pstCount();}})();}
+    setTimeout(pstCount,50);});
+  a.addEventListener('input',pstCount);
+  a.addEventListener('drop',function(e){e.stopPropagation();});
+  var p=$('#pstPub');if(p)p.onclick=function(){pstGo(true);};
+  var ed=$('#pstEdit');if(ed)ed.onclick=function(){pstGo(false);};
+  var c=$('#pstClear');if(c)c.onclick=function(){a.innerHTML='';pstSource='';pstCount();a.focus();};
+}
+if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',bindPaste);}else{bindPaste();}
 
 if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',bindImport);}else{bindImport();}
 

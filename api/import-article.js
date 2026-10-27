@@ -216,6 +216,8 @@ function sanitize(doc, root, base) {
 
 // -------------------------------------------------- tải ảnh về kho của mình
 async function rehost(sbUser, src, referer) {
+  const own = SUPABASE_URL + '/storage/v1/object/public/' + BUCKET + '/';
+  if (src.indexOf(own) === 0) return { path: decodeURIComponent(src.slice(own.length).split('?')[0]), url: src };
   await assertPublicUrl(src);
   const { res, buf } = await fetchWithLimit(src, {
     headers: { 'User-Agent': UA, Referer: referer, Accept: 'image/avif,image/webp,image/*,*/*;q=0.8' },
@@ -292,6 +294,49 @@ function extract(html, pageUrl) {
   return { doc: d3, root, title, excerpt, cover, siteName, published };
 }
 
+// -------------------------------------------------- bóc bài từ nội dung DÁN VÀO (Ctrl+V)
+function textToHtml(t) {
+  const esc = (x) => x.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return String(t || '').replace(/\r/g, '').split(/\n\s*\n|\n/).map((x) => x.trim()).filter(Boolean).map((x) => '<p>' + esc(x) + '</p>').join('');
+}
+function extractPasted(html, text, baseUrl, givenTitle) {
+  const base = baseUrl || 'https://nghiquyet57.shopmartai.com/';
+  if (!clean((html || '').replace(/<[^>]+>/g, ' ')) && !/<img/i.test(html || '')) html = textToHtml(text);
+  html = String(html || '').replace(/<!--StartFragment-->|<!--EndFragment-->/g, '');
+  // Không có thẻ khối (chỉ chữ + <br>) → mỗi dòng thành 1 đoạn văn
+  if (!/<(p|div|h[1-6]|li|ul|ol|table|blockquote|section|article)\b/i.test(html)) {
+    html = html.split(/<br\s*\/?>|\n/i).map((x) => x.trim()).filter((x) => clean(x.replace(/<[^>]+>/g, ' ')) || /<img/i.test(x)).map((x) => '<p>' + x + '</p>').join('');
+  }
+  const { document: doc } = parseHTML('<!doctype html><html><body><div id="__root">' + html + '</div></body></html>');
+  fixImages(doc, base);
+  const root = doc.getElementById('__root');
+  sanitize(doc, root, base);
+  let title = clean(givenTitle || '');
+  if (!title) {
+    const h = root.querySelector('h2,h3');
+    const firstBlock = Array.from(root.children).find((x) => clean(x.textContent));
+    const cand = (h && firstBlock && (firstBlock === h || firstBlock.contains(h))) ? h : firstBlock;
+    if (cand && clean(cand.textContent).length <= 220 && !cand.querySelector('img')) {
+      title = clean(cand.textContent);
+      const others = Array.from(root.children).some((x) => x !== cand && (clean(x.textContent) || x.querySelector('img')));
+      if (others) cand.remove();
+    }
+  }
+  let excerpt = '';
+  const p = Array.from(root.querySelectorAll('p')).map((x) => clean(x.textContent)).find((t) => t.length > 50) || '';
+  excerpt = p.length > 320 ? p.slice(0, 317).replace(/\s+\S*$/, '') + '…' : p;
+  if (!title) title = (excerpt || 'Bài viết').slice(0, 120).replace(/\s+\S*$/, '');
+  const hn = baseUrl ? new URL(baseUrl).hostname.replace(/^www\./, '') : '';
+  return { doc, root, title, excerpt, cover: '', siteName: /zalo/.test(hn) ? 'Zalo OA' : /facebook|fb\./.test(hn) ? 'Facebook' : hn, published: '' };
+}
+// Trang khoá nội dung sau đăng nhập — máy chủ không thể đọc
+function loginWall(u) {
+  const h = (u.hostname || '').toLowerCase();
+  if (/(^|\.)zalo\.me$|(^|\.)zaloapp\.com$/.test(h)) return 'Zalo';
+  if (/(^|\.)(facebook|fb)\.com$|(^|\.)fb\.watch$/.test(h)) return 'Facebook';
+  return '';
+}
+
 // ================================================================== HANDLER
 module.exports = async (req, res) => {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -317,9 +362,24 @@ module.exports = async (req, res) => {
       global: { headers: { Authorization: 'Bearer ' + token } },
     });
 
-    // 2) Tải trang gốc
+    // 2) Lấy nội dung: (a) từ nội dung DÁN vào, hoặc (b) tải trang gốc theo link
+    let a, finalUrl = '';
+    const pasted = typeof body.html === 'string' || typeof body.text === 'string';
+    if (pasted) {
+      if (String(body.html || '').length > 4 * 1024 * 1024) { res.status(413).json({ error: 'Nội dung dán quá lớn — hãy dán bớt hoặc chia làm 2 bài.' }); return; }
+      let src = '';
+      try { if (body.source_url) src = new URL(String(body.source_url)).href; } catch (e) { src = ''; }
+      finalUrl = src;
+      a = extractPasted(body.html, body.text, src, body.title);
+      if (!a.root.textContent.trim() && !a.root.querySelector('img')) { res.status(422).json({ error: 'Không thấy nội dung trong phần đã dán.' }); return; }
+    } else {
     const raw = String(body.url || '').trim();
     const pageUrl = (await assertPublicUrl(/^https?:\/\//i.test(raw) ? raw : 'https://' + raw)).href;
+    const wall = loginWall(new URL(pageUrl));
+    if (wall) {
+      res.status(422).json({ code: 'login_wall', site: wall, error: 'Bài viết trên ' + wall + ' bị ' + wall + ' khoá — chỉ xem được khi đã đăng nhập ' + wall + ', nên máy chủ không đọc được. Cách làm: mở bài trong ' + wall + ' → chọn toàn bộ nội dung → Sao chép → dán vào ô “📋 Dán bài viết” (ô màu xanh đang sáng lên).' });
+      return;
+    }
     let page;
     try {
       page = await fetchWithLimit(pageUrl, {
@@ -329,14 +389,15 @@ module.exports = async (req, res) => {
       res.status(422).json({ error: 'Không mở được trang gốc (' + (e.message || e) + '). Trang có thể chặn truy cập tự động hoặc yêu cầu đăng nhập.' });
       return;
     }
-    const finalUrl = page.res.url || pageUrl;
+    finalUrl = page.res.url || pageUrl;
     const html = decodeHtml(page.buf, page.res.headers.get('content-type'));
 
     // 3) Bóc bài
-    const a = extract(html, finalUrl);
+    a = extract(html, finalUrl);
     if (!a.title && !a.root.textContent.trim()) {
-      res.status(422).json({ error: 'Không tìm thấy nội dung bài viết ở link này (trang có thể dựng bằng JavaScript hoặc cần đăng nhập, ví dụ Facebook/Zalo).' });
+      res.status(422).json({ error: 'Không tìm thấy nội dung bài viết ở link này (trang có thể dựng bằng JavaScript hoặc cần đăng nhập, ví dụ Facebook/Zalo). Hãy dùng ô “📋 Dán bài viết”.' });
       return;
+    }
     }
 
     // 4) Tải ảnh về kho của mình
@@ -348,7 +409,7 @@ module.exports = async (req, res) => {
     const map = {};
     let ok = 0, fail = 0;
     if (rehostImages && all.length) {
-      const out = await pool(all, 6, (s) => rehost(sbUser, s, finalUrl));
+      const out = await pool(all, 6, (s) => rehost(sbUser, s, finalUrl || s));
       all.forEach((s, k) => { if (out[k]) { map[s] = out[k]; ok++; } else fail++; });
     }
     imgs.forEach((im) => { const m = map[im.getAttribute('src')]; if (m) im.setAttribute('src', m.url); });
@@ -361,11 +422,11 @@ module.exports = async (req, res) => {
     }
 
     // 5) Dòng ghi nguồn (biên tập viên có thể xoá nếu muốn)
-    const host = new URL(finalUrl).hostname.replace(/^www\./, '');
+    const host = finalUrl ? new URL(finalUrl).hostname.replace(/^www\./, '') : '';
     const src = a.doc.createElement('p');
     src.innerHTML = '<em>Nguồn: <a href="' + finalUrl.replace(/"/g, '&quot;') + '" target="_blank" rel="noopener">' +
       (a.siteName || host).replace(/[<>&]/g, '') + '</a></em>';
-    if (body.credit !== false) a.root.appendChild(src);
+    if (body.credit !== false && finalUrl) a.root.appendChild(src);
 
     const cover = coverSrc ? (map[coverSrc] || { url: coverSrc, path: '' }) : null;
     res.status(200).json({
@@ -387,3 +448,4 @@ module.exports = async (req, res) => {
 
 // Xuất riêng phần bóc bài để kiểm thử cục bộ
 module.exports._extract = extract;
+module.exports._extractPasted = extractPasted;
